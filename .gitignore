@@ -1,0 +1,42 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual Environment
+.venv/
+venv/
+ENV/
+env/
+
+# Environment Variables
+.env
+.env.*
+!.env.example
+.env.local
+
+# Databases
+*.db
+*.sqlite
+*.sqlite3
+retailflow.db
+
+# Pytest / Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Reports
+reports/
+*.csv
+
+# IDE & OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Archivos temporales
+*.log
