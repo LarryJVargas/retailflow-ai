@@ -1,91 +1,121 @@
-# Estrategia y Ejecución de Pruebas - RetailFlow AI
+# Estrategia y Ejecución de Pruebas Full Stack - RetailFlow AI
 
-Este documento detalla la suite completa de pruebas automatizadas que respaldan la estabilidad, integridad y resiliencia de **RetailFlow AI**.
-
----
-
-## 1. Arquitectura del Entorno de Pruebas
-
-Para garantizar pruebas deterministas, ultrarrápidas y sin efectos secundarios sobre los datos de desarrollo:
-
-- **Base de Datos Aislada en Memoria:**
-  En `tests/conftest.py` se utiliza `sqlite:///:memory:` con la estrategia `StaticPool` de SQLAlchemy.
-- **Ciclo de Vida por Prueba (`scope="function"`):**
-  Antes de cada prueba unitaria se ejecutan las sentencias `Base.metadata.create_all()` y al finalizar se invoca `Base.metadata.drop_all()`. De este modo, ninguna prueba contamina el estado de otra, ni modifica el archivo `retailflow.db` de desarrollo.
-- **Inyección de Dependencias Sobre-escrita:**
-  Se utiliza el mecanismo nativo `app.dependency_overrides[get_db]` para que FastAPI despache la sesión efímera en memoria a través de `TestClient`.
-- **Aislamiento de la IA (Mocks):**
-  Para la suite automatizada se utiliza `unittest.mock.patch("google.genai.Client")`, evitando llamadas de red, costos de cuota y dependencia de credenciales externas durante el proceso de testing.
+> [!NOTE]
+> **Aviso de Proyecto Personal:**
+> Este documento detalla la estrategia de aseguramiento de calidad de **RetailFlow AI**, un proyecto de portafolio personal desarrollado de forma independiente por un estudiante de Ingeniería en Sistemas para una postulación a **Pasante de Desarrollo Backend e IA**.
 
 ---
 
-## 2. Inventario de las 24 Pruebas Automatizadas
+## 1. Visión General de la Estrategia de Pruebas
 
-La suite cuenta exactamente con **24 pruebas** distribuidas en 4 módulos especializados:
+La calidad y confiabilidad de **RetailFlow AI** descansan sobre tres pilares complementarios:
+1. **Suite Automatizada de Backend:** 24 pruebas unitarias e integradoras con **Pytest**, ejecutadas sobre una base de datos SQLite en memoria aislada.
+2. **Validación de Compilación y Tipado de Frontend:** Verificación estricta de TypeScript (`tsc`) y empaquetado de producción con **Vite** (1601 módulos transformados sin errores).
+3. **Verificación Manual Integral en Vivo:** Pruebas funcionales de extremo a extremo desde el navegador web (`http://localhost:5173`) contra el backend real con credenciales de **Google Gemini API** (`gemini-3.5-flash`).
 
-### Módulo 1: Salud y Disponibilidad (`tests/test_health.py` - 1 Test)
-| Función de Test | Objetivo y Comprobaciones |
+---
+
+## 2. Aislamiento del Entorno de Pruebas de Backend
+
+Para asegurar que las pruebas sean deterministas, veloces y no contaminen los datos operativos:
+- **Base de Datos en Memoria:** En `tests/conftest.py` se utiliza `sqlite:///:memory:` con la estrategia `StaticPool` de SQLAlchemy.
+- **Ciclo de Vida Limpio por Prueba (`scope="function"`):** Cada test crea las tablas (`Base.metadata.create_all()`) y las destruye al finalizar (`Base.metadata.drop_all()`), asegurando aislamiento total entre ejecuciones y sin alterar `retailflow.db`.
+- **Inyección de Dependencias Sobre-escrita:** FastAPI utiliza `app.dependency_overrides[get_db]` para entregar la sesión de pruebas en memoria mediante `TestClient`.
+- **Mocks Controlados para IA:** En `tests/test_ai.py` se utiliza `unittest.mock.patch("google.genai.Client")` para simular respuestas de Gemini, permitiendo ejecutar la suite sin conexión a internet y sin costo de tokens.
+
+---
+
+## 3. Catálogo de las 24 Pruebas Pytest del Backend
+
+### Módulo 1: Salud y Configuración (`tests/test_health.py` - 1 Test)
+| Función de Test | Alcance y Comprobaciones |
 | :--- | :--- |
-| `test_health_check_returns_200_and_ok` | Valida que `GET /health` retorne HTTP 200, status "ok", nombre de la aplicación y entorno. |
+| `test_health_check_returns_200_and_ok` | Valida que `GET /health` retorne HTTP 200, status "ok", nombre de la aplicación y entorno actual. |
 
-### Módulo 2: Catálogo y CRUD de Productos (`tests/test_products.py` - 12 Tests)
-| Función de Test | Objetivo y Comprobaciones |
+### Módulo 2: Catálogo y Operaciones CRUD (`tests/test_products.py` - 12 Tests)
+| Función de Test | Alcance y Comprobaciones |
 | :--- | :--- |
-| `test_create_product_success` | Creación exitosa de producto vía `POST /products` (HTTP 201), validando campos y timestamp. |
-| `test_create_product_with_duplicate_sku_returns_409` | Intento de registrar un producto con un SKU existente. Debe rechazar con HTTP 409 Conflict. |
-| `test_create_product_negative_price_fails_with_422` | Validación Pydantic que impide precios negativos (HTTP 422 Unprocessable Entity). |
-| `test_create_product_negative_stock_fails_with_422` | Validación Pydantic que impide stock inicial negativo (HTTP 422). |
+| `test_create_product_success` | Creación exitosa de producto vía `POST /products` (HTTP 201), validando persistencia y campos. |
+| `test_create_product_with_duplicate_sku_returns_409` | Intento de registrar un SKU existente. Debe rechazar con HTTP 409 Conflict. |
+| `test_create_product_negative_price_fails_with_422` | Validación Pydantic que bloquea precios negativos (HTTP 422 Unprocessable Entity). |
+| `test_create_product_negative_stock_fails_with_422` | Validación Pydantic que bloquea stock inicial negativo (HTTP 422). |
 | `test_list_products` | Comportamiento de `GET /products` con catálogo vacío y con registros insertados. |
 | `test_get_product_by_id_success` | Consulta de detalle exitosa por ID numérico (`GET /products/{id}`). |
 | `test_get_product_by_id_not_found` | Retorno adecuado de HTTP 404 cuando el ID solicitado no existe. |
 | `test_patch_product_success` | Actualización parcial de campos (`PATCH /products/{id}`) preservando los atributos omitidos. |
 | `test_patch_product_duplicate_sku_returns_409` | Bloqueo de colisión de SKU durante una actualización parcial contra otro registro existente. |
 | `test_patch_product_not_found` | Retorno de HTTP 404 al intentar actualizar un ID inexistente. |
-| `test_delete_product_success` | Eliminación exitosa (`DELETE /products/{id}`) con HTTP 204 y posterior verificación de no existencia. |
+| `test_delete_product_success` | Eliminación física (`DELETE /products/{id}`) con HTTP 204 y posterior verificación de no existencia. |
 | `test_delete_product_not_found` | Retorno de HTTP 404 al intentar eliminar un ID inexistente. |
 
 ### Módulo 3: Métricas de Inventario y Reportes CSV (`tests/test_inventory.py` - 4 Tests)
-| Función de Test | Objetivo y Comprobaciones |
+| Función de Test | Alcance y Comprobaciones |
 | :--- | :--- |
-| `test_inventory_empty_database` | Verifica que con base vacía los endpoints `/summary`, `/low-stock`, `/out-of-stock` y `/report` respondan limpiamente sin errores ni nulos. |
-| `test_inventory_classification_and_metrics` | Verifica la partición matemática de clasificación de inventario: productos agotados, con bajo stock y saludables (incluyendo casos de borde donde `minimum_stock == 0`), garantizando que `total = low + out + healthy`. |
-| `test_inventory_csv_report_endpoint` | Descarga de reporte vía `GET /inventory/report`, validando cabecera `Content-Disposition`, formato CSV y exclusión de productos saludables. |
-| `test_save_inventory_report_to_disk_service` | Ejecución del servicio de exportación a disco (`report_service`), comprobando escritura en UTF-8 y presencia de cabeceras en el sistema de archivos temporal. |
+| `test_inventory_empty_database` | Verifica que con base vacía los endpoints `/summary`, `/low-stock`, `/out-of-stock` y `/report` respondan limpiamente. |
+| `test_inventory_classification_and_metrics` | Verifica la partición matemática mutuamente excluyente (agotados, stock bajo y saludables, incluyendo casos de borde con `minimum_stock = 0`), garantizando que `total = low + out + healthy`. |
+| `test_inventory_csv_report_endpoint` | Descarga de reporte vía `GET /inventory/report`, validando cabecera `Content-Disposition`, formato CSV y exclusión de artículos saludables. |
+| `test_save_inventory_report_to_disk_service` | Ejecución del servicio de exportación a disco (`report_service`), comprobando codificación UTF-8 y escritura en directorio temporal. |
 
-### Módulo 4: Análisis con IA y Resiliencia con Fallback (`tests/test_ai.py` - 7 Tests)
-| Función de Test | Objetivo y Comprobaciones |
+### Módulo 4: Análisis Inteligente y Resiliencia con Fallback (`tests/test_ai.py` - 7 Tests)
+| Función de Test | Alcance y Comprobaciones |
 | :--- | :--- |
-| `test_ai_analyze_inventory_empty_db` | Cuando no hay productos críticos, responde inmediatamente con estado saludable y 0 recomendaciones sin invocar a Gemini. |
+| `test_ai_analyze_inventory_empty_db` | Con inventario saludable, responde inmediatamente con `total_critical_products = 0` sin invocar a Gemini. |
 | `test_ai_analyze_inventory_valid_gemini_response` | Mock de Gemini retornando JSON válido, SKUs exactos y cantidades coincidentes. Valida respuesta con `source="gemini"`. |
-| `test_ai_analyze_inventory_invalid_json_triggers_fallback` | Mock retornando texto no parseable. Verifica que el sistema conmuta a `source="fallback"` con HTTP 200. |
-| `test_ai_analyze_inventory_hallucinated_sku_triggers_fallback` | Mock inyectando un SKU no existente en el catálogo. Valida que el filtro anti-alucinaciones active el fallback. |
+| `test_ai_analyze_inventory_invalid_json_triggers_fallback` | Mock retornando texto roto no parseable. Verifica conmutación automática a `source="fallback"` con HTTP 200. |
+| `test_ai_analyze_inventory_hallucinated_sku_triggers_fallback` | Mock inyectando un SKU inexistente en el catálogo. Valida que el filtro anti-alucinaciones active el fallback. |
 | `test_ai_analyze_inventory_inconsistent_quantity_triggers_fallback` | Mock modificando la cantidad de reposición calculada por el backend. Valida el rechazo y activación del fallback. |
-| `test_ai_analyze_inventory_api_exception_triggers_fallback` | Mock simulando una excepción de timeout / caída de API. Valida que la API no emita HTTP 500 y responda en fallback. |
+| `test_ai_analyze_inventory_api_exception_triggers_fallback` | Mock simulando una excepción de timeout / caída de API. Valida que el sistema responda con fallback sin emitir error 500. |
 | `test_ai_analyze_inventory_missing_api_key_triggers_fallback` | Con `GEMINI_API_KEY` vacía o no configurada, valida que el servicio utilice directamente las reglas deterministas locales. |
 
 ---
 
-## 3. Diferenciación: Pruebas Automatizadas vs. Verificación Real con Gemini
+## 4. Validación del Frontend (TypeScript & Vite)
 
-- **Pruebas Automatizadas (`pytest`):**
-  Utilizan simulaciones aisladas (mocks) para garantizar que la suite completa pueda ejecutarse sin conexión a internet, en cualquier pipeline de CI/CD, sin costo de tokens y en menos de 2 segundos.
-- **Verificación Real en Vivo:**
-  La conexión real con la API de Google Gemini fue contrastada independientemente mediante la interfaz interactiva de **Swagger UI** (`/docs`) y scripts auxiliares (`test_gemini_connection.py`), confirmando la recepción de respuestas generadas por el modelo `gemini-3.5-flash` con credenciales activas.
+El frontend fue sometido a validación estricta de compilación y empaquetado para producción:
+
+```powershell
+# En la carpeta frontend/:
+cd frontend
+npm run build
+```
+
+- **Resultado verificado:**
+  ```text
+  > retailflow-ai-frontend@0.1.0 build
+  > tsc && vite build
+
+  vite v6.4.6 building for production...
+  transforming...
+  ✓ 1601 modules transformed.
+  rendering chunks...
+  computing gzip size...
+  dist/index.html                   0.55 kB │ gzip:  0.37 kB
+  dist/assets/index-D9yChYps.css   24.41 kB │ gzip:  5.05 kB
+  dist/assets/index-CJDUQWw7.js   191.71 kB │ gzip: 58.34 kB
+  ✓ built in 2.62s
+  ```
+- **0 errores de TypeScript:** Configuración estricta en `tsconfig.json` con `noUnusedLocals`, `noUnusedParameters` y verificación de tipos en `src/services/api.ts`.
 
 ---
 
-## 4. Comandos de Ejecución en PowerShell
+## 5. Pruebas Funcionales Manuales Ejecutadas en Vivo
+
+Se comprobó manualmente en el navegador web el comportamiento de la solución Full Stack:
+1. **Flujo CRUD:** Registro de productos con validación de SKU, edición en tiempo real, reflejo inmediato en la tabla y eliminación mediante modal de confirmación.
+2. **Descarga de Reportes:** Clic en "Descargar CSV", validando la generación y descarga en disco del archivo con formato `inventory_report_YYYYMMDD_HHMMSS.csv`.
+3. **Inferencia Real con Gemini:** Ejecución de `POST /ai/analyze-inventory`, verificando en pantalla la insignia púrpura `Gemini AI (gemini-3.5-flash)` y las tarjetas de recomendación con prioridad y justificación contextual.
+4. **Resiliencia de Fallback:** Prueba sin API Key o con red desconectada, confirmando la conmutación a la insignia gris `Motor Determinista (Fallback)` sin interrupción del servicio.
+
+---
+
+## 6. Comandos de Verificación en PowerShell
 
 ```powershell
-# 1. Asegurar entorno virtual activo
+# 1. Asegurar entorno virtual activo y ejecutar Pytest (24 tests)
 .\.venv\Scripts\Activate.ps1
-
-# 2. Ejecutar toda la suite de pruebas (24 tests)
 pytest -v
 
-# 3. Ejecución por archivo
-pytest -v tests/test_health.py
-pytest -v tests/test_products.py
-pytest -v tests/test_inventory.py
-pytest -v tests/test_ai.py
+# 2. Compilar el frontend en producción
+cd frontend
+npm run build
 ```

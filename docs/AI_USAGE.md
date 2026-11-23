@@ -1,43 +1,45 @@
 # Registro de Uso y Validación de Inteligencia Artificial - RetailFlow AI
 
-Este documento describe con transparencia técnica el rol de las herramientas de Inteligencia Artificial en el desarrollo de **RetailFlow AI**, diferenciando con precisión la asistencia computacional de la supervisión, validación y depuración humana.
+> [!NOTE]
+> **Aviso de Proyecto Personal:**
+> Este documento detalla la trazabilidad técnica de las herramientas de Inteligencia Artificial empleadas en el desarrollo de **RetailFlow AI**, un proyecto de portafolio personal desarrollado de forma independiente por un estudiante de Ingeniería en Sistemas para una postulación a **Pasante de Desarrollo Backend e IA**.
 
 ---
 
 ## 1. Asistencia de IA vs. Validación e Ingeniería Humana
 
-En el desarrollo de este backend se adoptó un enfoque de **co-diseño asistido por IA** complementado con **auditoría manual rigurosa**:
+En el ciclo de desarrollo de RetailFlow AI se adoptó una metodología de **co-diseño asistido con validación técnica humana rigurosa**:
 
-- **Herramienta de Asistencia:** Se utilizó **Antigravity** (Google DeepMind) como agente de desarrollo para la generación inicial de estructuras de código (FastAPI, SQLAlchemy 2.0, esquemas Pydantic), automatización de pruebas y redacción de borradores de documentación.
+- **Herramienta de Asistencia:** Se utilizó **Antigravity** (Google DeepMind) como agente de desarrollo para la generación de estructuras iniciales de código (FastAPI, SQLAlchemy 2.0, esquemas Pydantic v2, componentes React con Tailwind y pruebas Pytest).
 - **Rol y Validación Humana:**
-  - Definición de los requisitos del dominio de negocio retail (prevención de stockout, partición mutuamente excluyente de inventario, contratos estrictos).
-  - Verificación manual e interactiva de los endpoints REST mediante la interfaz Swagger UI (`/docs`).
-  - Ejecución independiente y controlada de la suite de pruebas unitarias desde la terminal de **PowerShell**.
-  - Auditoría del código para garantizar que la IA nunca decida cantidades contables ni escriba directamente en la base de datos relacional.
+  - **Definición de Arquitectura y Negocio:** Establecimiento del principio de que **la IA nunca decide cantidades numéricas finales de inventario** ni escribe en la base de datos relacional.
+  - **Verificación en Vivo:** Pruebas interactivas manuales del frontend React (`http://localhost:5173`) y del backend a través de Swagger UI (`/docs`).
+  - **Ejecución y Control de Pruebas:** Ejecución independiente de la suite completa de **24 pruebas Pytest** desde la terminal de Windows PowerShell (`pytest -v`), confirmando 24/24 aprobadas.
+  - **Compilación de Frontend:** Verificación de la compilación de TypeScript y el empaquetado de producción de Vite (`npm run build`, transformando 1601 módulos en ~2.62 s).
 
 ---
 
-## 2. Registro de Incidentes Reales y Depuración
+## 2. Registro Cronológico de Incidentes Reales y Depuración
 
-Durante la integración con el SDK oficial de Gemini (`google-genai`), se presentaron desafíos técnicos concretos que fueron diagnosticados y resueltos:
+Durante la implementación del proyecto se diagnosticaron y resolvieron incidencias técnicas reales:
 
-### Incidente 1: `ModuleNotFoundError` en el entorno de ejecución
-- **Síntoma:** Al ejecutar pruebas iniciales o scripts de verificación, se produjo el error:
+### Incidente 1: `ModuleNotFoundError` en el entorno virtual de Python
+- **Síntoma:** Al ejecutar pruebas iniciales de IA, Python arrojó:
   ```text
   ModuleNotFoundError: No module named 'google'
   ```
-- **Causa:** La librería moderna `google-genai` había sido agregada a `requirements.txt`, pero el entorno virtual `.venv` no había completado la instalación del paquete tras una reconexión de terminal.
-- **Solución y Validación Humana:** Se ejecutó explícitamente desde PowerShell:
+- **Causa:** La librería oficial `google-genai` había sido declarada en `requirements.txt`, pero el entorno virtual `.venv` no había completado la instalación de dependencias tras una desconexión de sesión.
+- **Resolución Humana:** Se ejecutó explícitamente desde PowerShell:
   ```powershell
   pip install -r requirements.txt
   ```
-  Verificando con `pip show google-genai` que el paquete quedó correctamente instalado en `.venv\Lib\site-packages`.
+  Verificando la presencia de `google-genai>=1.0.0` y sus dependencias asociadas.
 
-### Incidente 2: Error 404 en el identificador de modelo `gemini-2.5-flash`
-- **Síntoma:** Al probar la llamada real a la API, la librería arrojó una excepción de tipo `NotFound (404)` indicando que el modelo `gemini-2.5-flash` no estaba habilitado o no existía bajo ese identificador en la API v1beta/v1 de Google AI Studio.
-- **Diagnóstico:** Se ejecutó el script `check_models.py` para listar los modelos con capacidad `generateContent` habilitados en la cuenta.
-- **Solución:** Se ajustó la configuración a `GEMINI_MODEL="gemini-3.5-flash"` en el archivo `.env`.
-- **Verificación Real:** Se invocó el endpoint `POST /ai/analyze-inventory` desde Swagger UI con la API Key configurada, obteniendo exitosamente una respuesta **HTTP 200** con:
+### Incidente 2: Error 404 con el modelo `gemini-2.5-flash`
+- **Síntoma:** La primera llamada real a Gemini API falló con una excepción HTTP 404 de Google AI Studio, indicando que el identificador `gemini-2.5-flash` no estaba habilitado en la región/cuenta.
+- **Diagnóstico:** Se ejecutó el script de inspección `check_models.py` para consultar qué modelos tenían habilitada la acción `generateContent`.
+- **Resolución:** Se configuró en `.env` el modelo soportado: `GEMINI_MODEL="gemini-3.5-flash"`.
+- **Verificación Real:** Se ejecutó la llamada desde Swagger UI y luego desde el Frontend React, obteniendo una respuesta **HTTP 200** con:
   ```json
   {
     "source": "gemini",
@@ -46,21 +48,35 @@ Durante la integración con el SDK oficial de Gemini (`google-genai`), se presen
   }
   ```
 
+### Incidente 3: Errores de compilación TypeScript en el Frontend
+- **Síntomas:** Al ejecutar `npm run build` en `frontend/`, TypeScript emitió:
+  ```text
+  src/main.tsx: error TS5097: An import path can only end with a '.tsx' extension when 'allowImportingTsExtensions' is enabled.
+  src/services/api.ts: error TS2339: Property 'env' does not exist on type 'ImportMeta'.
+  ```
+- **Causa:**
+  1. Importación con extensión explícita (`import App from './App.tsx'`).
+  2. Falta de referencia a los tipos de cliente de Vite para `import.meta.env`.
+- **Resolución:**
+  1. Se ajustó el import a `import App from './App'`.
+  2. Se creó el archivo `src/vite-env.d.ts` con `/// <reference types="vite/client" />` y la interfaz tipada `ImportMetaEnv`.
+- **Verificación:** El comando `npm run build` compiló sin advertencias ni errores en 20.97 s (y subsecuentes en 2.62 s).
+
 ---
 
-## 3. Pruebas de Mitigación de Alucinaciones y Fallos del Modelo
+## 3. Pruebas Automatizadas de Mitigación de Alucinaciones
 
-Para garantizar que RetailFlow AI sea seguro para un entorno retail comercial, se implementaron pruebas con mocks en `tests/test_ai.py` que simulan comportamientos adversos típicos de LLMs:
+Para asegurar la confiabilidad del sistema ante comportamientos estocásticos de los LLMs, se diseñaron pruebas unitarias especializadas en `tests/test_ai.py` utilizando mocks controlados:
 
-1. **Simulación de SKU Inventado (Alucinación):**
-   - El mock inyecta en la respuesta de Gemini un SKU inexistente (`SKU-INVENTADO-999`).
-   - El backend detecta la discrepancia con el catálogo real, descarta el payload y activa el **fallback determinista**, preservando la integridad del catálogo.
-2. **Simulación de Cantidad Inconsistente:**
-   - El backend calcula que se requieren 9 unidades de reposición para el producto `CAP-002`, pero el mock de Gemini devuelve `suggested_quantity: 50`.
-   - El sistema detecta que la IA intentó alterar la cantidad determinista y conmuta inmediatamente a **fallback**, asegurando que la IA no tome decisiones cuantitativas arbitrarias.
-3. **Simulación de JSON Malformado:**
-   - El mock devuelve texto plano o sintaxis rota.
-   - Pydantic y el parser de Python capturan el fallo de deserialización y activan el fallback sin emitir un error 500 al cliente.
-4. **Simulación de Errores de API (429 / Timeout):**
-   - El mock genera una excepción `TimeoutError`.
-   - El servicio responde con HTTP 200 en fallback, manteniendo la continuidad operativa de la sucursal.
+1. **Rechazo de SKUs Inventados (Alucinación):**
+   - El mock inyecta un SKU inexistente (`SKU-INVENTADO-999`).
+   - El backend detecta que el artículo no pertenece al catálogo de productos críticos enviados y activa inmediatamente el **fallback determinista** (`source="fallback"`).
+2. **Rechazo de Cantidades Inconsistentes:**
+   - Para un producto con stock crítico que requiere 9 unidades según el cálculo del backend, el mock de Gemini devuelve `suggested_quantity: 50`.
+   - El validador detecta la alteración cuantitativa y conmuta a fallback, garantizando que **la IA no pueda inflar ni recortar pedidos de compra**.
+3. **Manejo de Respuestas no Parseables:**
+   - El mock devuelve texto que no es JSON válido.
+   - El backend captura la excepción de deserialización y emite el análisis determinista en milisegundos con HTTP 200, evitando errores 500 en tienda.
+4. **Resiliencia ante Caídas de Red y Límites de Cuota (429 / Timeout):**
+   - El mock simula una excepción `TimeoutError`.
+   - El sistema responde con el fallback determinista, manteniendo la continuidad operativa sin bloquear el frontend ni exponer detalles internos de la API.
