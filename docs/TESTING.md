@@ -108,14 +108,26 @@ Se comprobó manualmente en el navegador web el comportamiento de la solución F
 
 ---
 
-## 6. Comandos de Verificación en PowerShell
+## 6. Comandos de Verificación Multiplataforma
 
+### 1. Pruebas Automatizadas de Backend (Pytest):
+
+**En Windows (PowerShell):**
 ```powershell
-# 1. Asegurar entorno virtual activo y ejecutar Pytest (24 tests)
 .\.venv\Scripts\Activate.ps1
 pytest -v
+```
 
-# 2. Compilar el frontend en producción
+**En Linux / macOS:**
+```bash
+source .venv/bin/activate
+pytest -v
+```
+
+### 2. Compilación y Validación de Tipos del Frontend (TypeScript & Vite):
+
+**En cualquier plataforma:**
+```bash
 cd frontend
 npm run build
 ```

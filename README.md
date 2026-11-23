@@ -101,32 +101,50 @@ Para un análisis técnico profundo de las capas, consulta [docs/ARCHITECTURE.md
 
 ---
 
-## 💻 Instalación y Puesta en Marcha (Windows PowerShell)
+## 💻 Instalación y Puesta en Marcha
 
 ### Requisitos Previos
 - **Python 3.12.x** y **Node.js 20+ / 24+** instalados en el sistema.
+- **Git** para clonar el repositorio.
 
 ---
 
-### Paso 1: Configurar e Iniciar el Backend
+### Paso 1: Clonar el Repositorio
 
-1. Posicionarse en la raíz del proyecto y activar el entorno virtual:
+```bash
+git clone https://github.com/<tu-usuario>/retailflow-ai.git
+cd retailflow-ai
+```
+
+---
+
+### Paso 2: Configurar e Iniciar el Backend
+
+1. Crear y activar el entorno virtual de Python:
+
+   **En Windows (PowerShell):**
    ```powershell
-   cd c:\Users\user\Desktop\Apps\retailflow-ai
    python -m venv .venv
    .\.venv\Scripts\Activate.ps1
    ```
+   *(Si PowerShell restringe la ejecución de scripts en tu equipo, habilítala para la sesión actual con: `Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process`)*.
 
-2. Instalar dependencias de Python:
-   ```powershell
+   **En Linux / macOS (Bash/Zsh):**
+   ```bash
+   python3 -m venv .venv
+   source .venv/bin/activate
+   ```
+
+2. Instalar dependencias del backend:
+   ```bash
    pip install -r requirements.txt
    ```
 
 3. Configurar variables de entorno del backend:
-   ```powershell
-   Copy-Item .env.example .env
-   ```
-   Editar `.env` para configurar tu clave de Gemini:
+   - En Windows (PowerShell): `Copy-Item .env.example .env`
+   - En Linux / macOS: `cp .env.example .env`
+
+   Editar el archivo `.env` resultante para configurar tu clave de Gemini:
    ```env
    APP_NAME="RetailFlow AI"
    APP_ENV="development"
@@ -134,46 +152,47 @@ Para un análisis técnico profundo de las capas, consulta [docs/ARCHITECTURE.md
    DATABASE_URL="sqlite:///./retailflow.db"
 
    # Gemini AI Configuration
-   GEMINI_API_KEY="AIzaSy..."
+   GEMINI_API_KEY=""
    GEMINI_MODEL="gemini-3.5-flash"
    ```
-   *(Si `GEMINI_API_KEY` se deja vacía, el sistema operará automáticamente utilizando el motor de fallback determinista).*
+   *(Nota: Si `GEMINI_API_KEY` se deja vacía o sin configurar, el sistema operará automáticamente utilizando el motor de fallback determinista local sin arrojar errores).*
 
-4. Iniciar el servidor FastAPI:
-   ```powershell
+4. Iniciar el servidor FastAPI (Uvicorn):
+   ```bash
    uvicorn app.main:app --reload --port 8000
    ```
-   - API Base: `http://127.0.0.1:8000`
-   - Documentación Interactiva Swagger UI: `http://127.0.0.1:8000/docs`
+   - API Base: `http://localhost:8000`
+   - Documentación Interactiva Swagger UI: `http://localhost:8000/docs`
+   - ReDoc: `http://localhost:8000/redoc`
 
 ---
 
-### Paso 2: Configurar e Iniciar el Frontend
+### Paso 3: Configurar e Iniciar el Frontend
 
-1. Abrir **otra terminal de PowerShell** y posicionarse en `frontend/`:
-   ```powershell
-   cd c:\Users\user\Desktop\Apps\retailflow-ai\frontend
+1. Abrir **otra terminal** y posicionarse en la carpeta `frontend/`:
+   ```bash
+   cd frontend
    ```
 
 2. Instalar dependencias de Node.js:
-   ```powershell
+   ```bash
    npm install
    ```
 
 3. Configurar variables de entorno del frontend:
-   ```powershell
-   Copy-Item .env.example .env
-   ```
-   *(Contenido por defecto: `VITE_API_BASE_URL=http://localhost:8000`)*.
+   - En Windows (PowerShell): `Copy-Item .env.example .env`
+   - En Linux / macOS: `cp .env.example .env`
+
+   *(Contenido por defecto en `.env`: `VITE_API_BASE_URL=http://localhost:8000`)*.
 
 4. Iniciar el servidor de desarrollo de Vite:
-   ```powershell
+   ```bash
    npm run dev
    ```
    - Abrir en el navegador: **`http://localhost:5173`**
 
 5. (Opcional) Compilar para producción:
-   ```powershell
+   ```bash
    npm run build
    ```
 
@@ -260,10 +279,17 @@ Para un análisis técnico profundo de las capas, consulta [docs/ARCHITECTURE.md
 
 ## 🧪 Ejecución de Pruebas Automatizadas
 
-La suite cuenta con **24 pruebas unitarias e integradoras** ejecutables con Pytest:
+La suite cuenta con **24 pruebas unitarias e integradoras** ejecutables con Pytest desde la raíz del proyecto (con el entorno virtual activo):
 
+**En Windows (PowerShell):**
 ```powershell
-# Ejecutar todas las pruebas en PowerShell
+.\.venv\Scripts\Activate.ps1
+pytest -v
+```
+
+**En Linux / macOS:**
+```bash
+source .venv/bin/activate
 pytest -v
 ```
 
@@ -278,12 +304,14 @@ Consulta el desglose completo en [docs/TESTING.md](docs/TESTING.md).
 
 ## 📑 Automatización de Reportes (CLI Script)
 
-Para exportar el reporte CSV de inventario crítico sin necesidad de iniciar el servidor web ni el navegador:
+Para exportar el reporte CSV de inventario crítico sin necesidad de iniciar el servidor web ni el navegador, ejecuta desde la raíz:
 
-```powershell
+```bash
 python scripts/generate_report.py
 ```
-El archivo generado se deposita en `reports/inventory_report_YYYYMMDD_HHMMSS.csv` (directorio ignorado por Git).
+*(En Linux/macOS: `python3 scripts/generate_report.py`)*
+
+El archivo generado se deposita en la carpeta `reports/` relativa a la raíz: `reports/inventory_report_YYYYMMDD_HHMMSS.csv` (directorio ignorado por Git).
 
 ---
 

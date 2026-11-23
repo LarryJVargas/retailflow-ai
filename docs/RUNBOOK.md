@@ -8,40 +8,61 @@
 
 ## 1. Requisitos del Sistema
 
-- **Sistema Operativo:** Windows 10/11 (ejecución mediante PowerShell).
+- **Sistemas Operativos Soportados:** Windows 10/11 (PowerShell), Linux (Ubuntu/Debian/Fedora) o macOS.
 - **Backend:** Python **3.12.x** añadido al `PATH`.
 - **Frontend:** Node.js **20+ o 24+** (con `npm`).
 - **Navegador Web:** Chrome, Edge, Firefox o cualquier navegador moderno.
+- **Git** para clonación del código fuente.
 
 ---
 
-## 2. Procedimiento de Arranque Full Stack
+## 2. Procedimiento de Clonación e Inicio Full Stack
 
-Se requieren dos terminales independientes de **PowerShell**:
+### Paso Previo: Clonar el Repositorio
+```bash
+git clone https://github.com/<tu-usuario>/retailflow-ai.git
+cd retailflow-ai
+```
+
+Se requieren dos terminales independientes (una para el Backend y otra para el Frontend):
 
 ### Terminal 1: Servidor Backend (FastAPI)
-```powershell
-# 1. Posicionarse en la raíz del proyecto
-cd c:\Users\user\Desktop\Apps\retailflow-ai
 
-# 2. Activar entorno virtual
-.\.venv\Scripts\Activate.ps1
+1. Crear y activar el entorno virtual:
 
-# 3. Iniciar Uvicorn en el puerto 8000
-uvicorn app.main:app --reload --port 8000
-```
-- Endpoint Base: `http://127.0.0.1:8000`
-- Documentación Swagger: `http://127.0.0.1:8000/docs`
+   **En Windows (PowerShell):**
+   ```powershell
+   python -m venv .venv
+   .\.venv\Scripts\Activate.ps1
+   ```
+
+   **En Linux / macOS:**
+   ```bash
+   python3 -m venv .venv
+   source .venv/bin/activate
+   ```
+
+2. Instalar dependencias e iniciar Uvicorn en el puerto 8000:
+   ```bash
+   pip install -r requirements.txt
+   uvicorn app.main:app --reload --port 8000
+   ```
+   - Endpoint Base: `http://localhost:8000`
+   - Documentación Swagger: `http://localhost:8000/docs`
 
 ### Terminal 2: Servidor Frontend (React + Vite)
-```powershell
-# 1. Posicionarse en la carpeta frontend
-cd c:\Users\user\Desktop\Apps\retailflow-ai\frontend
 
-# 2. Iniciar Vite en modo desarrollo
-npm run dev
-```
-- Aplicación Web: `http://localhost:5173`
+1. Posicionarse en la carpeta relativa `frontend/`:
+   ```bash
+   cd frontend
+   ```
+
+2. Instalar dependencias e iniciar Vite:
+   ```bash
+   npm install
+   npm run dev
+   ```
+   - Aplicación Web: `http://localhost:5173`
 
 ---
 
@@ -57,15 +78,20 @@ npm run dev
 
 La suite del backend cuenta con **24 pruebas** que se ejecutan sobre una base de datos SQLite en memoria aislada:
 
+**En Windows (PowerShell):**
 ```powershell
-# Desde la raíz del proyecto con el entorno virtual activo:
 .\.venv\Scripts\Activate.ps1
 pytest -v
 ```
 
-Para compilar y verificar el frontend:
-```powershell
-# Desde la carpeta frontend/:
+**En Linux / macOS:**
+```bash
+source .venv/bin/activate
+pytest -v
+```
+
+Para compilar y verificar el frontend en modo de producción:
+```bash
 cd frontend
 npm run build
 ```
@@ -97,14 +123,21 @@ npm run build
 
 ## 6. Verificación Segura de Variables de Entorno
 
-Para verificar que las variables están cargadas sin exponer contraseñas ni claves privadas en pantalla:
+Para verificar que las variables están cargadas sin exponer contraseñas ni claves privadas en la terminal:
 
-### Backend (PowerShell):
-```powershell
+### Backend:
+**En Windows (PowerShell) o Linux/macOS (Bash):**
+```bash
 python -c "import os; from dotenv import load_dotenv; load_dotenv(); key = os.getenv('GEMINI_API_KEY', ''); print(f'GEMINI_API_KEY presente: {bool(key)} | Longitud: {len(key)} chars | Modelo: {os.getenv(\"GEMINI_MODEL\")}')"
 ```
 
-### Frontend (PowerShell):
+### Frontend:
+**En Windows (PowerShell):**
 ```powershell
 Get-Content frontend/.env | Select-String "VITE_API_BASE_URL"
+```
+
+**En Linux / macOS (Bash):**
+```bash
+grep "VITE_API_BASE_URL" frontend/.env
 ```
