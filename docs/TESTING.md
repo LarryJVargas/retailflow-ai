@@ -1,8 +1,6 @@
 # Estrategia y Ejecución de Pruebas Full Stack - RetailFlow AI
 
-> [!NOTE]
-> **Aviso de Proyecto Personal:**
-> Este documento detalla la estrategia de aseguramiento de calidad de **RetailFlow AI**, un proyecto de portafolio personal desarrollado de forma independiente por un estudiante de Ingeniería en Sistemas para una postulación a **Pasante de Desarrollo Backend e IA**.
+Este documento detalla la estrategia integral de aseguramiento de calidad y el catálogo de pruebas de **RetailFlow AI**, cubriendo tanto la suite automatizada del backend en Pytest como la validación de tipado, empaquetado y pruebas de interfaz en el frontend.
 
 ---
 
@@ -17,7 +15,7 @@ La calidad y confiabilidad de **RetailFlow AI** descansan sobre tres pilares com
 
 ## 2. Aislamiento del Entorno de Pruebas de Backend
 
-Para asegurar que las pruebas sean deterministas, veloces y no contaminen los datos operativos:
+Para asegurar que las pruebas sean deterministas, reproducibles y no alteren los datos operativos:
 - **Base de Datos en Memoria:** En `tests/conftest.py` se utiliza `sqlite:///:memory:` con la estrategia `StaticPool` de SQLAlchemy.
 - **Ciclo de Vida Limpio por Prueba (`scope="function"`):** Cada test crea las tablas (`Base.metadata.create_all()`) y las destruye al finalizar (`Base.metadata.drop_all()`), asegurando aislamiento total entre ejecuciones y sin alterar `retailflow.db`.
 - **Inyección de Dependencias Sobre-escrita:** FastAPI utiliza `app.dependency_overrides[get_db]` para entregar la sesión de pruebas en memoria mediante `TestClient`.

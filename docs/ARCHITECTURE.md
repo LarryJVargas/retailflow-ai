@@ -1,8 +1,6 @@
 # Arquitectura del Sistema Full Stack - RetailFlow AI
 
-> [!NOTE]
-> **Aviso de Proyecto Personal:**
-> Este documento describe la arquitectura técnica de **RetailFlow AI**, un proyecto de portafolio personal desarrollado de forma independiente por un estudiante de Ingeniería en Sistemas para una postulación a **Pasante de Desarrollo Backend e IA**. Está inspirado en desafíos logísticos de grandes cadenas de retail (como Carrefour Argentina), sin constituir un producto oficial ni desarrollo institucional de dicha compañía.
+Este documento describe la arquitectura técnica, los flujos de datos y las decisiones de diseño de **RetailFlow AI**, una plataforma Full Stack orientada a la gestión inteligente de inventarios, disponibilidad de producto en góndola y optimización logística en el sector retail.
 
 ---
 
@@ -13,7 +11,7 @@ En el sector de retail y consumo masivo, la disponibilidad de producto en góndo
 - El **sobrestock** genera inmovilización de capital de trabajo, congestión de depósitos en tienda y mayor merma por vencimiento o deterioro.
 
 **RetailFlow AI** resuelve este equilibrio mediante una **arquitectura Full Stack híbrida y defensiva**:
-> **Las decisiones cuantitativas y críticas de inventario se gobiernan de forma estricta por lógica determinista en el backend Python, mientras que la Inteligencia Artificial Generativa (Google Gemini) se utiliza exclusivamente para contextualización semántica, síntesis ejecutiva y priorización operativa.**
+> **Las cantidades de reposición de inventario se calculan estrictamente mediante reglas deterministas en el backend Python, mientras que la Inteligencia Artificial (Google Gemini) se utiliza para aportar análisis contextual, resumen ejecutivo y priorización operativa.**
 
 ---
 
@@ -174,4 +172,4 @@ La IA opera en modo de **solo lectura en memoria**. No posee permisos, rutas ni 
 | **Tailwind CSS Utility-First** | CSS Modules / Styled Components | Desarrollo rápido de una interfaz SaaS moderna, diseño responsivo predecible y optimización automática del bundle final (24.4 kB de CSS gzippeado en 5 kB). |
 | **Vite sobre CRA** | Create React App | Compilación incremental y HMR instantáneo en desarrollo, con build de producción en menos de 3 segundos para 1600+ módulos. |
 | **SQLite con SQLAlchemy 2.0** | PostgreSQL en contenedor | Portabilidad inmediata sin requerir infraestructura cloud ni Docker local para evaluar el proyecto. El uso de SQLAlchemy 2.0 desacopla el código relacional, permitiendo migrar a PostgreSQL en producción cambiando únicamente `DATABASE_URL`. |
-| **Testing con SQLite en memoria y `StaticPool`** | Mockear SQLAlchemy con MagicMock | Probar contra una base de datos SQLite real en memoria asegura que las consultas SQL, filtros, ordenamientos y transacciones se ejecuten con fidelidad absoluta sin tocar la base de desarrollo. |
+| **Testing con SQLite en memoria y `StaticPool`** | Mockear SQLAlchemy con MagicMock | Probar contra una base de datos SQLite real en memoria asegura que las consultas SQL, filtros, ordenamientos y transacciones se evalúen contra un motor relacional real sin alterar la base de datos de desarrollo. |

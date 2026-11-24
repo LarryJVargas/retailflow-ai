@@ -10,24 +10,23 @@
 [![Google Gemini API](https://img.shields.io/badge/Google%20GenAI-gemini--3.5--flash-8E24AA.svg?logo=google&logoColor=white)](https://ai.google.dev/)
 [![Tests Passing](https://img.shields.io/badge/Pytest-24%2F24%20Passed-brightgreen.svg?logo=pytest&logoColor=white)](docs/TESTING.md)
 
-> [!NOTE]
-> **Aviso de Proyecto Personal:**
-> **RetailFlow AI** es un proyecto de portafolio personal desarrollado de forma independiente por un estudiante de Ingeniería en Sistemas. Ha sido diseñado como pieza de demostración técnica para una postulación a **Pasante de Desarrollo Backend e IA**, inspirado en los desafíos logísticos y de abastecimiento de grandes cadenas de retail como Carrefour Argentina. **No constituye un producto oficial, desarrollo institucional ni propiedad de Carrefour.**
+**RetailFlow AI** es una plataforma Full Stack de gestión inteligente de inventario y optimización de abastecimiento para el sector retail. Diseñada con un enfoque de arquitectura híbrida y defensiva, combina el cálculo determinista de reglas de inventario en Python con la capacidad analítica y contextual de **Google Gemini API** (`gemini-3.5-flash`), incorporando mitigación de alucinaciones mediante validaciones en el backend y un mecanismo de fallback determinista.
 
 ---
 
-## 🏬 El Problema de Negocio en Retail
+## 🏬 Propósito y Problema de Negocio en Retail
 
-En la gestión de inventario de supermercados e hipermercados, el descalce entre la demanda y el stock disponible provoca dos contingencias de alto costo:
+En la gestión de inventarios para supermercados, hipermercados y cadenas de consumo masivo, el descalce entre la demanda y el stock disponible genera dos contingencias de alto impacto operativo:
 1. **Quiebre de Stock en Góndola (*Stockout*):** Falta física de producto que causa pérdida directa de ingresos, insatisfacción del consumidor y daño a la fidelidad del cliente.
 2. **Sobrestock y Capital Inmovilizado:** Exceso de mercadería en depósitos de sucursal que satura el espacio físico, eleva el riesgo de mermas/vencimientos e inmoviliza capital operativo.
 
-**RetailFlow AI** resuelve este dilema a través de una **arquitectura Full Stack híbrida y defensiva**:
-- **Cálculo Determinista Backend:** Las cantidades sugeridas de reposición se rigen por la fórmula matemática inalterable:
+**RetailFlow AI** aborda este desafío a través de una **arquitectura Full Stack híbrida y defensiva**:
+- **Cálculo Determinista Backend:** Las cantidades sugeridas de reposición se calculan exclusivamente mediante reglas deterministas en el backend:
   $$\text{suggested\_restock} = \max(\text{minimum\_stock} - \text{stock}, 0)$$
-- **Enriquecimiento Semántico con IA:** **Google Gemini API** (`gemini-3.5-flash`) diagnostica el contexto comercial y prioriza la urgencia operativa (`CRITICAL`, `HIGH`, `MEDIUM`, `LOW`).
-- **Resiliencia Operativa:** Ante cualquier falla externa de cuota, red o formato, se activa automáticamente un **fallback determinista** en milisegundos con `source="fallback"`.
-- **Frontend SaaS Reactivo:** Dashboard ejecutivo y panel de control de inventario construido con React, Vite, TypeScript y Tailwind CSS.
+  La IA no define ni modifica las cantidades finales.
+- **Análisis Contextual con IA:** **Google Gemini API** (`gemini-3.5-flash`) aporta contextualización operativa y prioriza la urgencia de reposición (`CRITICAL`, `HIGH`, `MEDIUM`, `LOW`).
+- **Resiliencia Operativa:** Ante contingencias de red, límites de cuota o respuestas no válidas de la IA, el sistema activa automáticamente un **fallback determinista** local con `source="fallback"`.
+- **Frontend SaaS Reactivo:** Dashboard y panel de control de inventario construido con React, Vite, TypeScript y Tailwind CSS.
 
 ---
 
@@ -48,7 +47,7 @@ En la gestión de inventario de supermercados e hipermercados, el descalce entre
 
 ### Frontend
 - **React 18.3.1 + TypeScript 5.7.3:** Tipado estricto para componentes, DTOs y llamadas API.
-- **Vite 6.1.0:** Empaquetador ultrarrápido con soporte HMR (build de producción en ~2.6s).
+- **Vite 6.1.0:** Entorno de desarrollo y empaquetador con soporte HMR y compilación de producción optimizada.
 - **Tailwind CSS 3.4.17:** Diseño de interfaz SaaS responsivo (desktop, tablet y móvil).
 - **Lucide React 0.475.0:** Iconografía profesional para retail y métricas.
 - **Fetch API nativo:** Cliente HTTP centralizado sin dependencias pesadas innecesarias.
@@ -95,7 +94,7 @@ El flujo de comunicación respeta las siguientes premisas:
 1. **Frontend Desacoplado:** El cliente web consume la URL del backend a través de `VITE_API_BASE_URL`.
 2. **CORS Controlado:** FastAPI autoriza únicamente las solicitudes provenientes de orígenes locales de desarrollo.
 3. **Cero Exposición de Secretos:** `GEMINI_API_KEY` reside exclusivamente en el archivo `.env` del backend y **nunca** se envía al frontend ni a logs.
-4. **Validación Anti-Alucinaciones:** El backend intercepta la respuesta de Gemini, verifica la existencia de SKUs, rechaza duplicados y audita que las cantidades sugeridas coincidan con el cálculo del backend antes de entregarlas al frontend.
+4. **Mitigación de Alucinaciones mediante Validaciones:** El backend intercepta la respuesta de Gemini, verifica la existencia de SKUs, rechaza duplicados y audita que las cantidades sugeridas coincidan exactamente con el cálculo del backend antes de entregarlas al frontend.
 
 Para un análisis técnico profundo de las capas, consulta [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 

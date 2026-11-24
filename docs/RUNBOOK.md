@@ -1,8 +1,6 @@
 # Guía Operativa y Runbook Full Stack - RetailFlow AI
 
-> [!NOTE]
-> **Aviso de Proyecto Personal:**
-> Este documento detalla los procedimientos de operación y contingencia de **RetailFlow AI**, un proyecto de portafolio personal desarrollado de forma independiente por un estudiante de Ingeniería en Sistemas para una postulación a **Pasante de Desarrollo Backend e IA**. No constituye un documento operativo de Carrefour Argentina ni de ninguna otra entidad comercial.
+Este documento detalla los procedimientos de instalación, puesta en marcha, operación diaria, monitoreo, contingencias y resolución de errores para **RetailFlow AI** en entornos de desarrollo y evaluación técnica.
 
 ---
 
@@ -114,10 +112,10 @@ npm run build
 | Error / Código | Causa Probable | Comportamiento del Sistema y Mitigación |
 | :--- | :--- | :--- |
 | **401 Unauthorized** | `GEMINI_API_KEY` vacía, inválida o expirada en `.env`. | **Comportamiento:** Se activa el fallback determinista (`source="fallback"`).<br>**Mitigación:** Obtener una clave válida en Google AI Studio y actualizar `.env`. |
-| **403 Forbidden** | Clave sin permisos de inferencia o bloqueada por región. | El sistema conmuta automáticamente a fallback determinista en milisegundos sin arrojar error 500 al operador. |
+| **403 Forbidden** | Clave sin permisos de inferencia o bloqueada por región. | El sistema conmuta automáticamente al análisis determinista de fallback sin emitir un error no controlado al cliente. |
 | **404 Not Found (Modelo)** | Identificador de modelo inexistente en la API (ej. `gemini-2.5-flash`). | Configurar en `.env`: `GEMINI_MODEL="gemini-3.5-flash"`. Se puede ejecutar `python check_models.py` para listar los modelos habilitados. |
 | **429 Too Many Requests** | Límite de cuota gratuita por minuto o día alcanzado en Google AI Studio. | El backend intercepta el 429 y responde de forma transparente con el análisis determinista. La operación de tienda no se interrumpe. |
-| **Timeout de Conexión** | Latencia de red o cuelgue temporal de los servidores externos. | El bloque `except Exception` captura el timeout y responde con fallback en menos de 20 ms. |
+| **Timeout de Conexión** | Latencia de red o cuelgue temporal de los servidores externos. | El bloque `except Exception` captura la excepción de timeout y genera la respuesta mediante el fallback determinista local. |
 
 ---
 

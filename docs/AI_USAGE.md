@@ -1,8 +1,6 @@
 # Registro de Uso y Validación de Inteligencia Artificial - RetailFlow AI
 
-> [!NOTE]
-> **Aviso de Proyecto Personal:**
-> Este documento detalla la trazabilidad técnica de las herramientas de Inteligencia Artificial empleadas en el desarrollo de **RetailFlow AI**, un proyecto de portafolio personal desarrollado de forma independiente por un estudiante de Ingeniería en Sistemas para una postulación a **Pasante de Desarrollo Backend e IA**.
+Este documento detalla con transparencia técnica el rol de las herramientas de Inteligencia Artificial empleadas en el desarrollo de **RetailFlow AI**, diferenciando la aceleración y asistencia computacional de la supervisión, validación técnica y depuración humana.
 
 ---
 
@@ -76,7 +74,7 @@ Para asegurar la confiabilidad del sistema ante comportamientos estocásticos de
    - El validador detecta la alteración cuantitativa y conmuta a fallback, garantizando que **la IA no pueda inflar ni recortar pedidos de compra**.
 3. **Manejo de Respuestas no Parseables:**
    - El mock devuelve texto que no es JSON válido.
-   - El backend captura la excepción de deserialización y emite el análisis determinista en milisegundos con HTTP 200, evitando errores 500 en tienda.
+   - El backend captura la excepción de deserialización y devuelve el análisis determinista con HTTP 200, evitando errores no controlados en la interfaz.
 4. **Resiliencia ante Caídas de Red y Límites de Cuota (429 / Timeout):**
    - El mock simula una excepción `TimeoutError`.
    - El sistema responde con el fallback determinista, manteniendo la continuidad operativa sin bloquear el frontend ni exponer detalles internos de la API.

@@ -107,7 +107,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </span>
         </div>
         <div className="text-[11px] text-slate-400">
-          RetailFlow AI v0.1.0 • Carrefour Tech
+          RetailFlow AI v0.1.0 • Core Suite
         </div>
       </div>
     </aside>
