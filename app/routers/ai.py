@@ -1,7 +1,9 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Request, status
 from sqlalchemy.orm import Session
 
+from app.config import get_settings
 from app.database import get_db
+from app.limiter import limiter
 from app.schemas.ai import InventoryAnalysisResponse
 from app.services import ai_service
 
@@ -21,7 +23,9 @@ router = APIRouter(prefix="/ai", tags=["AI Inventory Analysis"])
         "se retorna automáticamente un análisis determinista con source='fallback'."
     ),
 )
+@limiter.limit(lambda: get_settings().rate_limit_ai)
 def analyze_inventory_endpoint(
+    request: Request,
     db: Session = Depends(get_db),
 ) -> InventoryAnalysisResponse:
     return ai_service.analyze_inventory(db)

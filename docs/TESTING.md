@@ -7,7 +7,7 @@ Este documento detalla la estrategia integral de aseguramiento de calidad y el c
 ## 1. Visión General de la Estrategia de Pruebas
 
 La calidad y confiabilidad de **RetailFlow AI** descansan sobre tres pilares complementarios:
-1. **Suite Automatizada de Backend:** 24 pruebas unitarias e integradoras con **Pytest**, ejecutadas sobre una base de datos SQLite en memoria aislada.
+1. **Suite Automatizada de Backend:** 36 pruebas unitarias e integradoras con **Pytest**, ejecutadas sobre una base de datos SQLite en memoria aislada.
 2. **Validación de Compilación y Tipado de Frontend:** Verificación estricta de TypeScript (`tsc`) y empaquetado de producción con **Vite** (1601 módulos transformados sin errores).
 3. **Verificación Manual Integral en Vivo:** Pruebas funcionales de extremo a extremo desde el navegador web (`http://localhost:5173`) contra el backend real con credenciales de **Google Gemini API** (`gemini-3.5-flash`).
 
@@ -23,7 +23,15 @@ Para asegurar que las pruebas sean deterministas, reproducibles y no alteren los
 
 ---
 
-## 3. Catálogo de las 24 Pruebas Pytest del Backend
+## 3. Catálogo de las 36 Pruebas Pytest del Backend
+
+### Módulo 0: Configuración de Entorno y Producción (`tests/test_config.py` - 4 Tests)
+| Función de Test | Alcance y Comprobaciones |
+| :--- | :--- |
+| `test_resolved_database_url_converts_postgres_scheme` | Verifica que el esquema `postgres://` se normalice a `postgresql://` para SQLAlchemy 2.0. |
+| `test_resolved_database_url_preserves_postgresql_and_sqlite` | Confirma que `sqlite:///` y `postgresql+psycopg2://` permanecen sin alteraciones. |
+| `test_parsed_cors_origins_splits_and_trims` | Comprueba el parseo de orígenes CORS separados por comas y limpieza de espacios. |
+| `test_parsed_cors_origins_empty_string` | Valida el comportamiento seguro frente a cadenas vacías o solo comas. |
 
 ### Módulo 1: Salud y Configuración (`tests/test_health.py` - 1 Test)
 | Función de Test | Alcance y Comprobaciones |
@@ -65,6 +73,18 @@ Para asegurar que las pruebas sean deterministas, reproducibles y no alteren los
 | `test_ai_analyze_inventory_api_exception_triggers_fallback` | Mock simulando una excepción de timeout / caída de API. Valida que el sistema responda con fallback sin emitir error 500. |
 | `test_ai_analyze_inventory_missing_api_key_triggers_fallback` | Con `GEMINI_API_KEY` vacía o no configurada, valida que el servicio utilice directamente las reglas deterministas locales. |
 
+### Módulo 5: Protección y Rate Limiting (`tests/test_rate_limiting.py` - 8 Tests)
+| Función de Test | Alcance y Comprobaciones |
+| :--- | :--- |
+| `test_create_product_rate_limit_allows_requests_within_limit` | Verifica que `POST /products` responda HTTP 201 dentro del límite configurado. |
+| `test_create_product_rate_limit_returns_429_when_exceeded` | Comprueba que al superar `RATE_LIMIT_WRITE` en creación se devuelva HTTP 429. |
+| `test_delete_product_rate_limit_returns_429_when_exceeded` | Verifica que `DELETE /products/{id}` comparta bucket por `scope` y devuelva HTTP 429 al superar `RATE_LIMIT_DELETE`. |
+| `test_ai_rate_limit_allows_requests_within_limit` | Confirma que `POST /ai/analyze-inventory` responda HTTP 200 dentro de `RATE_LIMIT_AI`. |
+| `test_ai_rate_limit_returns_429_when_exceeded` | Verifica que superar `RATE_LIMIT_AI` devuelva HTTP 429 sin invocar a Gemini. |
+| `test_rate_limit_response_structure` | Valida el cuerpo y código HTTP 429 emitido por SlowAPI. |
+| `test_patch_product_rate_limit_returns_429_when_exceeded` | Verifica que `PATCH /products/{id}` comparta bucket `products:write` y devuelva HTTP 429. |
+| `test_rate_limit_respects_x_forwarded_for_proxy_header` | Valida que clientes distintos detrás de proxy (`X-Forwarded-For`) tengan contadores independientes. |
+
 ---
 
 ## 4. Validación del Frontend (TypeScript & Vite)
@@ -87,10 +107,10 @@ npm run build
   ✓ 1601 modules transformed.
   rendering chunks...
   computing gzip size...
-  dist/index.html                   0.55 kB │ gzip:  0.37 kB
+  dist/index.html                   0.55 kB │ gzip:  0.36 kB
   dist/assets/index-D9yChYps.css   24.41 kB │ gzip:  5.05 kB
-  dist/assets/index-CJDUQWw7.js   191.71 kB │ gzip: 58.34 kB
-  ✓ built in 2.62s
+  dist/assets/index-Csn6CQEx.js   191.70 kB │ gzip: 58.33 kB
+  ✓ built in 43.51s
   ```
 - **0 errores de TypeScript:** Configuración estricta en `tsconfig.json` con `noUnusedLocals`, `noUnusedParameters` y verificación de tipos en `src/services/api.ts`.
 

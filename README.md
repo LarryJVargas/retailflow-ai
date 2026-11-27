@@ -8,7 +8,7 @@
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.4.17-38B2AC.svg?logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
 [![SQLAlchemy 2.0](https://img.shields.io/badge/SQLAlchemy-2.1.9-red.svg?logo=sqlalchemy&logoColor=white)](https://www.sqlalchemy.org/)
 [![Google Gemini API](https://img.shields.io/badge/Google%20GenAI-gemini--3.5--flash-8E24AA.svg?logo=google&logoColor=white)](https://ai.google.dev/)
-[![Tests Passing](https://img.shields.io/badge/Pytest-24%2F24%20Passed-brightgreen.svg?logo=pytest&logoColor=white)](docs/TESTING.md)
+[![Tests Passing](https://img.shields.io/badge/Pytest-36%2F36%20Passed-brightgreen.svg?logo=pytest&logoColor=white)](docs/TESTING.md)
 
 **RetailFlow AI** es una plataforma Full Stack de gestión inteligente de inventario y optimización de abastecimiento para el sector retail. Diseñada con un enfoque de arquitectura híbrida y defensiva, combina el cálculo determinista de reglas de inventario en Python con la capacidad analítica y contextual de **Google Gemini API** (`gemini-3.5-flash`), incorporando mitigación de alucinaciones mediante validaciones en el backend y un mecanismo de fallback determinista.
 
@@ -56,10 +56,11 @@ En la gestión de inventarios para supermercados, hipermercados y cadenas de con
 - **Python 3.12.2:** Entorno de ejecución de última generación con tipado fuerte.
 - **FastAPI 0.165.0:** API REST asíncrona, validación automática mediante Pydantic v2 y documentación OpenAPI interactiva.
 - **SQLAlchemy 2.1.9:** ORM declarativo moderno (`Mapped`, `mapped_column`, consultas tipadas `select()`).
-- **SQLite:** Base de datos relacional ligera (`retailflow.db`) para portabilidad total.
+- **SQLite / PostgreSQL (`psycopg2-binary`):** Base de datos SQLite (`retailflow.db`) por defecto para desarrollo local y compatibilidad con PostgreSQL (Supabase) mediante `DATABASE_URL` para producción.
+- **SlowAPI:** Protección mediante *rate limiting* por IP configurable por variables de entorno (`HTTP 429`), con soporte para encabezados `X-Forwarded-For` detrás de proxies reversos.
 - **Google GenAI SDK (`google-genai`):** Cliente oficial de Google para inferencia con el modelo `gemini-3.5-flash`.
 - **Pydantic v2 & Pydantic-Settings:** Validación exhaustiva de contratos y configuración segura de variables de entorno.
-- **Pytest 9.2.0 + HTTPX:** 24 pruebas automatizadas sobre base de datos en memoria (`sqlite:///:memory:`) con `StaticPool` y mocks de IA.
+- **Pytest 9.2.0 + HTTPX:** 36 pruebas automatizadas sobre base de datos en memoria (`sqlite:///:memory:`) con `StaticPool`, mocks de IA y pruebas de rate limiting.
 
 ---
 
@@ -85,16 +86,17 @@ En la gestión de inventarios para supermercados, hipermercados y cadenas de con
                │ SQLAlchemy 2.0 ORM           │ google-genai SDK
                ▼                              ▼
 ┌──────────────────────────────┐  ┌───────────────────────────┐
-│     SQLite (retailflow.db)   │  │   Google Gemini API       │
+│  SQLite (local) / PostgreSQL │  │   Google Gemini API       │
 │      Catálogo e Inventario   │  │    (gemini-3.5-flash)     │
 └──────────────────────────────┘  └───────────────────────────┘
 ```
 
 El flujo de comunicación respeta las siguientes premisas:
 1. **Frontend Desacoplado:** El cliente web consume la URL del backend a través de `VITE_API_BASE_URL`.
-2. **CORS Controlado:** FastAPI autoriza únicamente las solicitudes provenientes de orígenes locales de desarrollo.
-3. **Cero Exposición de Secretos:** `GEMINI_API_KEY` reside exclusivamente en el archivo `.env` del backend y **nunca** se envía al frontend ni a logs.
-4. **Mitigación de Alucinaciones mediante Validaciones:** El backend intercepta la respuesta de Gemini, verifica la existencia de SKUs, rechaza duplicados y audita que las cantidades sugeridas coincidan exactamente con el cálculo del backend antes de entregarlas al frontend.
+2. **CORS Configurable:** FastAPI autoriza los orígenes definidos dinámicamente mediante la variable de entorno `CORS_ORIGINS` (incluyendo puertos locales por defecto).
+3. **Rate Limiting y Resiliencia:** `SlowAPI` limita las operaciones de escritura (`POST`, `PATCH`, `DELETE`) y de análisis IA por IP para proteger la demo pública.
+4. **Cero Exposición de Secretos:** `GEMINI_API_KEY` reside exclusivamente en el archivo `.env` (o variables de entorno del hosting) y **nunca** se envía al frontend ni a logs.
+5. **Mitigación de Alucinaciones mediante Validaciones:** El backend intercepta la respuesta de Gemini, verifica la existencia de SKUs, rechaza duplicados y audita que las cantidades sugeridas coincidan exactamente con el cálculo del backend antes de entregarlas al frontend.
 
 Para un análisis técnico profundo de las capas, consulta [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
@@ -220,7 +222,27 @@ cd retailflow-ai
 ### Análisis Inteligente con IA (`/ai`)
 | Método | Endpoint | Descripción | Códigos HTTP |
 | :--- | :--- | :--- | :--- |
-| `POST` | `/ai/analyze-inventory` | Análisis de inventario crítico mediante Gemini o Fallback Determinista | `200` |
+| `POST` | `/ai/analyze-inventory` | Análisis de inventario crítico mediante Gemini o Fallback Determinista | `200`, `429` |
+
+*(Nota: Los endpoints `POST /products`, `PATCH /products/{id}`, `DELETE /products/{id}` y `POST /ai/analyze-inventory` pueden responder `429 Too Many Requests` si se supera la tasa configurada en SlowAPI).*
+
+---
+
+## 🚀 Preparación para Despliegue en Producción
+
+El repositorio incluye la configuración necesaria para desplegar la aplicación en arquitectura separada (pendiente de provisión en plataformas externas):
+
+| Capa | Plataforma Objetivo | Configuración Clave |
+| :--- | :--- | :--- |
+| **Frontend** | Vercel | Root Directory: `frontend` · `frontend/vercel.json` (rewrites SPA) · `VITE_API_BASE_URL` |
+| **Backend** | Render | `uvicorn app.main:app --host 0.0.0.0 --port $PORT` · `CORS_ORIGINS`, `GEMINI_API_KEY`, `RATE_LIMIT_*` |
+| **Base de Datos** | Supabase (PostgreSQL) | `DATABASE_URL=postgresql://...` (normalización automática de `postgres://` y `pool_pre_ping`) |
+
+Para poblar inicialmente la base de datos (local o PostgreSQL) con 14 productos de demostración de forma idempotente:
+```bash
+python scripts/seed_data.py
+```
+*(En Linux/macOS: `python3 scripts/seed_data.py`)*. Consulta el detalle operativo completo en [docs/RUNBOOK.md](docs/RUNBOOK.md).
 
 ---
 
@@ -278,7 +300,7 @@ cd retailflow-ai
 
 ## 🧪 Ejecución de Pruebas Automatizadas
 
-La suite cuenta con **24 pruebas unitarias e integradoras** ejecutables con Pytest desde la raíz del proyecto (con el entorno virtual activo):
+La suite cuenta con **36 pruebas unitarias e integradoras** ejecutables con Pytest desde la raíz del proyecto (con el entorno virtual activo):
 
 **En Windows (PowerShell):**
 ```powershell
@@ -292,10 +314,12 @@ source .venv/bin/activate
 pytest -v
 ```
 
+- **4 pruebas en `test_config.py`:** Normalización de `DATABASE_URL` (`postgres://` → `postgresql://`) y parsing de `CORS_ORIGINS`.
 - **1 prueba en `test_health.py`:** Verificación de salud y configuración.
 - **12 pruebas en `test_products.py`:** CRUD completo, unicidad de SKU, códigos 404, 409 y validaciones Pydantic 422.
 - **4 pruebas en `test_inventory.py`:** Métricas mutuamente excluyentes, bordes con `minimum_stock = 0`, reporte CSV y guardado en disco.
 - **7 pruebas en `test_ai.py`:** Simulación de respuestas exitosas con mocks, detección de JSON inválido, rechazo de SKUs inventados, detección de cantidades alteradas por IA y fallbacks por error de API.
+- **8 pruebas en `test_rate_limiting.py`:** Límites configurables con SlowAPI, respuestas HTTP 429 en `POST`/`PATCH`/`DELETE`/`/ai` y extracción de IP vía `X-Forwarded-For`.
 
 Consulta el desglose completo en [docs/TESTING.md](docs/TESTING.md).
 
@@ -327,6 +351,6 @@ El archivo generado se deposita en la carpeta `reports/` relativa a la raíz: `r
 
 1. **Autenticación y Control de Acceso (RBAC):** Implementación de JWT para distinguir roles de sucursal (repositor/cajero con permisos de lectura y ajuste de stock vs. gerente de tienda con administración de catálogo y reportes).
 2. **Escalabilidad Multi-Sucursal:** Modelar la entidad `Store` y soporte para stock distribuido y transferencias entre depósitos.
-3. **Migración a Base de Datos de Producción:** Transición transparente de SQLite a PostgreSQL alojado en la nube (AWS RDS / GCP Cloud SQL) modificando únicamente la variable `DATABASE_URL`.
+3. **Validación en Vivo contra PostgreSQL y Despliegue:** El soporte de engine y driver (`psycopg2-binary`) ya está implementado; resta aprovisionar la instancia en Supabase y completar el despliegue en Render/Vercel.
 4. **Pronóstico de Demanda Predictivo:** Integración de modelos de series temporales (ej. Prophet o XGBoost) para anticipar picos de demanda estacional y fines de semana.
 5. **Alertas Push Automatizadas:** Integración de webhooks para alertar a canales de Slack / Microsoft Teams cuando se detecten artículos en estado `CRITICAL`.

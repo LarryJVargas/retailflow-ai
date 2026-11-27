@@ -1,10 +1,13 @@
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 
 from app.config import get_settings
 from app.database import Base, engine
+from app.limiter import limiter
 from app.routers import ai_router, health_router, inventory_router, products_router
 
 settings = get_settings()
@@ -29,17 +32,14 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# Configuración de CORS para desarrollo local del frontend
-origins = [
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-]
+# Integración de SlowAPI para rate limiting basado en IP
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
+# Configuración de CORS dinámica mediante variables de entorno
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=settings.parsed_cors_origins,
     allow_credentials=True,
     allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["*"],

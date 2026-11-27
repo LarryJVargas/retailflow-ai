@@ -1,13 +1,16 @@
 from collections.abc import Sequence
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.database import get_db
+from app.limiter import limiter
 from app.models.product import Product
 from app.schemas.product import ProductCreate, ProductResponse, ProductUpdate
+from app.config import get_settings
 
 router = APIRouter(prefix="/products", tags=["Products"])
+settings = get_settings()
 
 
 @router.get(
@@ -53,7 +56,9 @@ def get_product(
     summary="Crear un nuevo producto",
     description="Registra un nuevo producto en el catálogo. El código SKU debe ser único.",
 )
+@limiter.shared_limit(lambda: get_settings().rate_limit_write, scope="products:write")
 def create_product(
+    request: Request,
     payload: ProductCreate,
     db: Session = Depends(get_db),
 ) -> Product:
@@ -79,7 +84,9 @@ def create_product(
     summary="Actualizar parcialmente un producto",
     description="Permite modificar uno o varios atributos de un producto existente.",
 )
+@limiter.shared_limit(lambda: get_settings().rate_limit_write, scope="products:write")
 def update_product(
+    request: Request,
     product_id: int,
     payload: ProductUpdate,
     db: Session = Depends(get_db),
@@ -123,7 +130,9 @@ def update_product(
     summary="Eliminar un producto",
     description="Elimina permanentemente un producto del catálogo por su ID.",
 )
+@limiter.shared_limit(lambda: get_settings().rate_limit_delete, scope="products:delete")
 def delete_product(
+    request: Request,
     product_id: int,
     db: Session = Depends(get_db),
 ) -> None:

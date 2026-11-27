@@ -1,0 +1,14 @@
+# Normalizar saltos de línea al hacer commit (LF en repositorio, nativo en checkout)
+* text=auto eol=lf
+
+# Binarios: sin conversión de saltos de línea
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.ico binary
+*.db  binary
+*.csv binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary

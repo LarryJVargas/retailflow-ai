@@ -7,7 +7,7 @@ Este documento detalla los procedimientos de instalación, puesta en marcha, ope
 ## 1. Requisitos del Sistema
 
 - **Sistemas Operativos Soportados:** Windows 10/11 (PowerShell), Linux (Ubuntu/Debian/Fedora) o macOS.
-- **Backend:** Python **3.12.x** añadido al `PATH`.
+- **Backend:** Python **3.12.x** añadido al `PATH`, con soporte para SQLite (local) y PostgreSQL mediante `psycopg2-binary` (producción).
 - **Frontend:** Node.js **20+ o 24+** (con `npm`).
 - **Navegador Web:** Chrome, Edge, Firefox o cualquier navegador moderno.
 - **Git** para clonación del código fuente.
@@ -74,7 +74,7 @@ Se requieren dos terminales independientes (una para el Backend y otra para el F
 
 ## 4. Ejecución de Pruebas Automatizadas
 
-La suite del backend cuenta con **24 pruebas** que se ejecutan sobre una base de datos SQLite en memoria aislada:
+La suite del backend cuenta con **36 pruebas** que se ejecutan sobre una base de datos SQLite en memoria aislada:
 
 **En Windows (PowerShell):**
 ```powershell
@@ -96,6 +96,50 @@ npm run build
 
 ---
 
+## 5. Preparación y Despliegue en Producción (Supabase + Render + Vercel)
+
+> **Estado:** La aplicación está técnicamente preparada para desplegarse en estos entornos (aún pendiente de provisión en plataformas externas).
+
+### A. Base de Datos PostgreSQL (Supabase)
+1. Crear un proyecto en Supabase y copiar el *Connection String* (`URI`).
+2. `app/config.py` normaliza automáticamente `postgres://` a `postgresql://` para compatibilidad con SQLAlchemy 2.0.
+3. En `app/database.py`, el engine desactiva `check_same_thread` cuando no es SQLite y habilita `pool_pre_ping=True` y `pool_recycle=300`.
+
+### B. Backend FastAPI (Render)
+1. Crear un **Web Service** conectado al repositorio.
+2. **Build Command:** `pip install -r requirements.txt`
+3. **Start Command:**
+   ```bash
+   uvicorn app.main:app --host 0.0.0.0 --port $PORT
+   ```
+4. **Variables de Entorno requeridas en Render:**
+   - `APP_ENV=production`
+   - `DEBUG=False`
+   - `DATABASE_URL=postgresql://postgres:[PASSWORD]@[HOST]:[PORT]/postgres`
+   - `GEMINI_API_KEY=<tu_clave_de_google_ai_studio>`
+   - `GEMINI_MODEL=gemini-3.5-flash`
+   - `CORS_ORIGINS=https://<tu-frontend>.vercel.app`
+   - `RATE_LIMIT_WRITE=10/minute`
+   - `RATE_LIMIT_DELETE=5/minute`
+   - `RATE_LIMIT_AI=3/minute`
+
+### C. Frontend React + Vite (Vercel)
+1. Importar el repositorio en Vercel estableciendo **Root Directory** en `frontend`.
+2. `frontend/vercel.json` ya incluye las reglas de *rewrite* hacia `/index.html` para soporte de SPA.
+3. Configurar la variable de entorno:
+   - `VITE_API_BASE_URL=https://<tu-backend>.onrender.com`
+
+### D. Inicialización de Datos Demo (Seed Idempotente)
+Para poblar una base de datos nueva (local o PostgreSQL apuntando `DATABASE_URL` al entorno destino) con 14 productos de ejemplo sin duplicar ni sobrescribir registros existentes:
+```bash
+python scripts/seed_data.py
+```
+*(En Linux/macOS: `python3 scripts/seed_data.py`)*.
+
+**Estrategia para Demo Pública:** El backend aplica *rate limiting* por IP mediante `SlowAPI` (respetando `X-Forwarded-For` detrás del proxy de Render) sobre `POST`, `PATCH`, `DELETE` y `/ai/analyze-inventory`, devolviendo `HTTP 429`. Como el límite por IP no protege la cuota global de Gemini frente a tráfico distribuido, se recomienda configurar topes de cuota en Google AI Studio y re-ejecutar `scripts/seed_data.py` si se necesita restaurar el catálogo de demostración.
+
+---
+
 ## 5. Matriz de Diagnóstico y Resolución de Errores (Troubleshooting)
 
 ### A. Errores de Comunicación Frontend ↔ Backend
@@ -103,7 +147,8 @@ npm run build
 | Síntoma / Error | Causa Probable | Procedimiento de Mitigación |
 | :--- | :--- | :--- |
 | **`TypeError: Failed to fetch` en la consola del navegador** | El backend no está encendido en el puerto 8000 o la URL en `VITE_API_BASE_URL` es incorrecta. | 1. Verificar que Uvicorn esté corriendo en `http://localhost:8000`.<br>2. Revisar que `frontend/.env` contenga `VITE_API_BASE_URL=http://localhost:8000`. |
-| **Error de CORS en la consola (`Access-Control-Allow-Origin`)** | La solicitud proviene de un origen no registrado en `origins` dentro de `app/main.py`. | Comprobar que el frontend esté corriendo en `http://localhost:5173` o `http://127.0.0.1:5173`. Si se utiliza otro puerto (ej. 3000), verificar que esté incluido en la lista `origins` de FastAPI. |
+| **Error de CORS en la consola (`Access-Control-Allow-Origin`)** | La solicitud proviene de un origen no registrado en la variable de entorno `CORS_ORIGINS`. | Comprobar que `CORS_ORIGINS` (en `.env` local o en el panel de Render) incluya el dominio exacto del frontend (ej. `http://localhost:5173` o `https://tu-app.vercel.app`), separados por comas y sin barra final. |
+| **Error 429 Too Many Requests en `/products` o `/ai`** | Se superó el límite de peticiones por IP configurado en `SlowAPI`. | Esperar un minuto o ajustar `RATE_LIMIT_WRITE`, `RATE_LIMIT_DELETE` o `RATE_LIMIT_AI` en las variables de entorno. |
 | **Error 409 Conflict al guardar producto** | El código SKU ingresado ya existe en la base de datos para otro artículo. | La interfaz muestra un aviso contextual en el modal. Ingresar un SKU único para el producto. |
 | **Error 422 Unprocessable Entity** | Valores numéricos negativos (precio < 0, stock < 0) o campos de texto vacíos. | El cliente HTTP extrae los errores de validación de Pydantic y los presenta en el formulario. Corregir los campos señalados. |
 
@@ -126,7 +171,7 @@ Para verificar que las variables están cargadas sin exponer contraseñas ni cla
 ### Backend:
 **En Windows (PowerShell) o Linux/macOS (Bash):**
 ```bash
-python -c "import os; from dotenv import load_dotenv; load_dotenv(); key = os.getenv('GEMINI_API_KEY', ''); print(f'GEMINI_API_KEY presente: {bool(key)} | Longitud: {len(key)} chars | Modelo: {os.getenv(\"GEMINI_MODEL\")}')"
+python -c "from app.config import get_settings; s = get_settings(); print(f'ENV: {s.app_env} | DB_IS_SQLITE: {s.resolved_database_url.startswith(\"sqlite\")} | CORS_ORIGINS: {len(s.parsed_cors_origins)} | GEMINI_KEY_SET: {bool(s.gemini_api_key)} | MODEL: {s.gemini_model}')"
 ```
 
 ### Frontend:
