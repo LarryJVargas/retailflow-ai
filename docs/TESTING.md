@@ -28,8 +28,8 @@ Para asegurar que las pruebas sean deterministas, reproducibles y no alteren los
 ### Módulo 0: Configuración de Entorno y Producción (`tests/test_config.py` - 4 Tests)
 | Función de Test | Alcance y Comprobaciones |
 | :--- | :--- |
-| `test_resolved_database_url_converts_postgres_scheme` | Verifica que el esquema `postgres://` se normalice a `postgresql://` para SQLAlchemy 2.0. |
-| `test_resolved_database_url_preserves_postgresql_and_sqlite` | Confirma que `sqlite:///` y `postgresql+psycopg2://` permanecen sin alteraciones. |
+| `test_resolved_database_url_converts_postgres_and_postgresql_schemes` | Verifica que `postgres://` y `postgresql://` se normalicen a `postgresql+psycopg2://` para usar `psycopg2-binary` en SQLAlchemy 2.0. |
+| `test_resolved_database_url_preserves_psycopg2_and_sqlite` | Confirma que `postgresql+psycopg2://` y `sqlite:///` permanecen sin alteraciones. |
 | `test_parsed_cors_origins_splits_and_trims` | Comprueba el parseo de orígenes CORS separados por comas y limpieza de espacios. |
 | `test_parsed_cors_origins_empty_string` | Valida el comportamiento seguro frente a cadenas vacías o solo comas. |
 

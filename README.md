@@ -236,7 +236,7 @@ El repositorio incluye la configuración necesaria para desplegar la aplicación
 | :--- | :--- | :--- |
 | **Frontend** | Vercel | Root Directory: `frontend` · `frontend/vercel.json` (rewrites SPA) · `VITE_API_BASE_URL` |
 | **Backend** | Render | `uvicorn app.main:app --host 0.0.0.0 --port $PORT` · `CORS_ORIGINS`, `GEMINI_API_KEY`, `RATE_LIMIT_*` |
-| **Base de Datos** | Supabase (PostgreSQL) | `DATABASE_URL=postgresql://...` (normalización automática de `postgres://` y `pool_pre_ping`) |
+| **Base de Datos** | Supabase (PostgreSQL) | `DATABASE_URL` con Session Pooler (`?sslmode=require`), normalización automática a `postgresql+psycopg2://` y `pool_pre_ping` |
 
 Para poblar inicialmente la base de datos (local o PostgreSQL) con 14 productos de demostración de forma idempotente:
 ```bash
@@ -314,7 +314,7 @@ source .venv/bin/activate
 pytest -v
 ```
 
-- **4 pruebas en `test_config.py`:** Normalización de `DATABASE_URL` (`postgres://` → `postgresql://`) y parsing de `CORS_ORIGINS`.
+- **4 pruebas en `test_config.py`:** Normalización de `DATABASE_URL` (`postgres://` y `postgresql://` → `postgresql+psycopg2://`) y parsing de `CORS_ORIGINS`.
 - **1 prueba en `test_health.py`:** Verificación de salud y configuración.
 - **12 pruebas en `test_products.py`:** CRUD completo, unicidad de SKU, códigos 404, 409 y validaciones Pydantic 422.
 - **4 pruebas en `test_inventory.py`:** Métricas mutuamente excluyentes, bordes con `minimum_stock = 0`, reporte CSV y guardado en disco.

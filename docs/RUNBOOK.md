@@ -100,9 +100,9 @@ npm run build
 
 > **Estado:** La aplicación está técnicamente preparada para desplegarse en estos entornos (aún pendiente de provisión en plataformas externas).
 
-### A. Base de Datos PostgreSQL (Supabase)
-1. Crear un proyecto en Supabase y copiar el *Connection String* (`URI`).
-2. `app/config.py` normaliza automáticamente `postgres://` a `postgresql://` para compatibilidad con SQLAlchemy 2.0.
+### A. Base de Datos PostgreSQL (Supabase Session Pooler)
+1. Crear un proyecto en Supabase y copiar el *Connection String* del **Session Pooler** (puerto `5432`, con `?sslmode=require`).
+2. `app/config.py` normaliza automáticamente los prefijos `postgres://` y `postgresql://` a `postgresql+psycopg2://` para usar el driver `psycopg2-binary` con SQLAlchemy 2.0.
 3. En `app/database.py`, el engine desactiva `check_same_thread` cuando no es SQLite y habilita `pool_pre_ping=True` y `pool_recycle=300`.
 
 ### B. Backend FastAPI (Render)
@@ -115,7 +115,7 @@ npm run build
 4. **Variables de Entorno requeridas en Render:**
    - `APP_ENV=production`
    - `DEBUG=False`
-   - `DATABASE_URL=postgresql://postgres:[PASSWORD]@[HOST]:[PORT]/postgres`
+   - `DATABASE_URL=postgresql+psycopg2://postgres.[PROJECT_REF]:[PASSWORD]@[HOST]:5432/postgres?sslmode=require`
    - `GEMINI_API_KEY=<tu_clave_de_google_ai_studio>`
    - `GEMINI_MODEL=gemini-3.5-flash`
    - `CORS_ORIGINS=https://<tu-frontend>.vercel.app`

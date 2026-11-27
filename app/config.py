@@ -29,12 +29,15 @@ class Settings(BaseSettings):
         """Normaliza el esquema de conexión de bases de datos.
 
         Muchos proveedores de hosting (Supabase, Render) entregan URLs que comienzan
-        con 'postgres://', las cuales deben ser normalizadas a 'postgresql://' para
-        ser compatibles con SQLAlchemy 2.0 y el driver psycopg2.
+        con 'postgres://' o 'postgresql://'. Se normalizan explícitamente a
+        'postgresql+psycopg2://' para asegurar que SQLAlchemy 2.0 utilice el driver
+        psycopg2-binary instalado en lugar de intentar cargar psycopg 3.
         """
         url = self.database_url.strip()
         if url.startswith("postgres://"):
-            return url.replace("postgres://", "postgresql://", 1)
+            return url.replace("postgres://", "postgresql+psycopg2://", 1)
+        if url.startswith("postgresql://"):
+            return url.replace("postgresql://", "postgresql+psycopg2://", 1)
         return url
 
     @property
