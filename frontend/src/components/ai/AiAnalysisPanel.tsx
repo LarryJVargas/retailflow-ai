@@ -20,10 +20,10 @@ export const AiAnalysisPanel: React.FC<AiAnalysisPanelProps> = ({
   return (
     <div className="space-y-6">
       {/* Cabecera del Panel */}
-      <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2 mb-1.5">
-            <div className="p-1.5 rounded-lg bg-amber-100 text-amber-800">
+      <div className="bg-white border border-slate-200 rounded-xl p-4 sm:p-6 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2 mb-1.5">
+            <div className="p-1.5 rounded-lg bg-amber-100 text-amber-800 shrink-0">
               <Sparkles className="w-5 h-5" />
             </div>
             <h2 className="text-lg font-bold text-slate-900 tracking-tight">
@@ -48,7 +48,7 @@ export const AiAnalysisPanel: React.FC<AiAnalysisPanelProps> = ({
           onClick={onRunAnalysis}
           loading={loading}
           icon={<RefreshCw className="w-4 h-4" />}
-          className="shrink-0"
+          className="w-full md:w-auto shrink-0"
         >
           {analysis ? 'Re-analizar Inventario' : 'Ejecutar Análisis'}
         </Button>
@@ -73,7 +73,7 @@ export const AiAnalysisPanel: React.FC<AiAnalysisPanelProps> = ({
               : 'bg-slate-50/80 border-slate-200'
           }`}
         >
-          <div className="flex items-center justify-between mb-3">
+          <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
             <div className="flex items-center gap-2">
               <ShieldCheck
                 className={`w-5 h-5 ${
@@ -107,7 +107,7 @@ export const AiAnalysisPanel: React.FC<AiAnalysisPanelProps> = ({
       {/* Grid de Recomendaciones */}
       {analysis && analysis.recommendations.length > 0 && (
         <div className="space-y-3">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <h3 className="text-xs font-bold uppercase tracking-wider text-slate-600">
               Recomendaciones Priorizadas
             </h3>
@@ -123,7 +123,7 @@ export const AiAnalysisPanel: React.FC<AiAnalysisPanelProps> = ({
                 className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm hover:border-slate-300 transition-all flex flex-col justify-between"
               >
                 <div>
-                  <div className="flex items-center justify-between mb-2">
+                  <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
                     <span className="font-mono text-xs font-bold text-slate-900 bg-slate-100 px-2 py-0.5 rounded">
                       {rec.sku}
                     </span>
@@ -134,7 +134,7 @@ export const AiAnalysisPanel: React.FC<AiAnalysisPanelProps> = ({
                   </p>
                 </div>
 
-                <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
+                <div className="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2 text-xs">
                   <span className="text-slate-500 font-medium">Cantidad a reponer (Backend):</span>
                   <span className="font-bold text-retail-700 text-sm">
                     +{rec.suggested_quantity} u.
@@ -148,7 +148,7 @@ export const AiAnalysisPanel: React.FC<AiAnalysisPanelProps> = ({
 
       {/* Estado vacío si no se ejecutó análisis aún */}
       {!analysis && !loading && (
-        <div className="bg-white border border-slate-200 rounded-xl p-12 text-center text-slate-400 shadow-sm">
+        <div className="bg-white border border-slate-200 rounded-xl p-6 sm:p-12 text-center text-slate-400 shadow-sm">
           <Sparkles className="w-10 h-10 text-amber-400/80 mx-auto mb-3" />
           <h3 className="text-sm font-bold text-slate-700 mb-1">
             Ningún análisis ejecutado en esta sesión

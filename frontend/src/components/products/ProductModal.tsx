@@ -127,7 +127,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
           {localErrors.name && <p className="text-xs text-rose-600 mt-1">{localErrors.name}</p>}
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
               Código SKU *
@@ -176,7 +176,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
           {localErrors.price && <p className="text-xs text-rose-600 mt-1">{localErrors.price}</p>}
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
               Stock Actual *
@@ -210,11 +210,11 @@ export const ProductModal: React.FC<ProductModalProps> = ({
           </div>
         </div>
 
-        <div className="pt-4 border-t border-slate-100 flex items-center justify-end gap-2.5">
-          <Button type="button" variant="outline" onClick={onClose} disabled={loading}>
+        <div className="pt-4 border-t border-slate-100 flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2.5">
+          <Button type="button" variant="outline" onClick={onClose} disabled={loading} className="w-full sm:w-auto">
             Cancelar
           </Button>
-          <Button type="submit" variant="primary" loading={loading}>
+          <Button type="submit" variant="primary" loading={loading} className="w-full sm:w-auto">
             {isEditing ? 'Guardar Cambios' : 'Registrar Producto'}
           </Button>
         </div>

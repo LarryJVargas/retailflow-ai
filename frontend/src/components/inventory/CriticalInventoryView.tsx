@@ -30,7 +30,7 @@ export const CriticalInventoryView: React.FC<CriticalInventoryViewProps> = ({
   return (
     <div className="space-y-4">
       {/* Banner de llamada de atención hacia Gemini */}
-      <div className="bg-gradient-to-r from-slate-900 to-retail-950 text-white rounded-xl p-5 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+      <div className="bg-gradient-to-r from-slate-900 to-retail-950 text-white rounded-xl p-4 sm:p-5 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
           <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-retail-700/60 text-retail-100 border border-retail-500/30 mb-2">
             Control de Abastecimiento Retail
@@ -58,7 +58,7 @@ export const CriticalInventoryView: React.FC<CriticalInventoryViewProps> = ({
       </div>
 
       {/* Tabs de filtro rápido */}
-      <div className="flex items-center gap-2 border-b border-slate-200 pb-2">
+      <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 pb-2">
         <button
           onClick={() => setActiveTab('all')}
           className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
@@ -96,16 +96,16 @@ export const CriticalInventoryView: React.FC<CriticalInventoryViewProps> = ({
       {/* Tabla de artículos críticos */}
       <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
+          <table className="w-full min-w-[680px] text-left text-sm">
             <thead className="bg-slate-50 border-b border-slate-200 text-xs font-semibold uppercase tracking-wider text-slate-500">
               <tr>
-                <th className="px-6 py-3">SKU</th>
-                <th className="px-6 py-3">Nombre</th>
-                <th className="px-6 py-3">Categoría</th>
-                <th className="px-6 py-3 text-center">Stock Actual</th>
-                <th className="px-6 py-3 text-center">Stock Mínimo</th>
-                <th className="px-6 py-3 text-center">Estado</th>
-                <th className="px-6 py-3 text-center bg-retail-50/50 text-retail-800">
+                <th className="px-4 sm:px-6 py-3">SKU</th>
+                <th className="px-4 sm:px-6 py-3">Nombre</th>
+                <th className="px-4 sm:px-6 py-3">Categoría</th>
+                <th className="px-4 sm:px-6 py-3 text-center">Stock Actual</th>
+                <th className="px-4 sm:px-6 py-3 text-center">Stock Mínimo</th>
+                <th className="px-4 sm:px-6 py-3 text-center">Estado</th>
+                <th className="px-4 sm:px-6 py-3 text-center bg-retail-50/50 text-retail-800">
                   Reposición Sugerida
                 </th>
               </tr>
@@ -133,18 +133,18 @@ export const CriticalInventoryView: React.FC<CriticalInventoryViewProps> = ({
               ) : (
                 displayedItems.map((item) => (
                   <tr key={item.id} className="hover:bg-slate-50/70 transition-colors">
-                    <td className="px-6 py-3.5 font-mono text-xs font-bold text-slate-800 whitespace-nowrap">
+                    <td className="px-4 sm:px-6 py-3.5 font-mono text-xs font-bold text-slate-800 whitespace-nowrap">
                       {item.sku}
                     </td>
-                    <td className="px-6 py-3.5 font-medium text-slate-900">
+                    <td className="px-4 sm:px-6 py-3.5 font-medium text-slate-900">
                       {item.name}
                     </td>
-                    <td className="px-6 py-3.5 text-slate-600 whitespace-nowrap">
+                    <td className="px-4 sm:px-6 py-3.5 text-slate-600 whitespace-nowrap">
                       <span className="px-2 py-0.5 rounded text-xs bg-slate-100 font-medium">
                         {item.category}
                       </span>
                     </td>
-                    <td className="px-6 py-3.5 text-center whitespace-nowrap">
+                    <td className="px-4 sm:px-6 py-3.5 text-center whitespace-nowrap">
                       <span
                         className={`font-bold text-sm ${
                           item.stock === 0 ? 'text-rose-600' : 'text-amber-600'
@@ -153,13 +153,13 @@ export const CriticalInventoryView: React.FC<CriticalInventoryViewProps> = ({
                         {item.stock}
                       </span>
                     </td>
-                    <td className="px-6 py-3.5 text-center text-slate-500 font-medium whitespace-nowrap">
+                    <td className="px-4 sm:px-6 py-3.5 text-center text-slate-500 font-medium whitespace-nowrap">
                       {item.minimum_stock}
                     </td>
-                    <td className="px-6 py-3.5 text-center whitespace-nowrap">
+                    <td className="px-4 sm:px-6 py-3.5 text-center whitespace-nowrap">
                       <InventoryStatusBadge status={item.status} />
                     </td>
-                    <td className="px-6 py-3.5 text-center font-bold text-base text-retail-700 bg-retail-50/30 whitespace-nowrap">
+                    <td className="px-4 sm:px-6 py-3.5 text-center font-bold text-base text-retail-700 bg-retail-50/30 whitespace-nowrap">
                       +{item.suggested_restock} u.
                     </td>
                   </tr>

@@ -15,6 +15,7 @@ import { InventoryAnalysisResponse } from './types/ai';
 
 export default function App() {
   const [currentTab, setCurrentTab] = useState<NavigationTab>('dashboard');
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
 
   // Estados de datos
   const [products, setProducts] = useState<Product[]>([]);
@@ -204,12 +205,14 @@ export default function App() {
   const { title, subtitle } = getPageTitle();
 
   return (
-    <div className="flex h-screen bg-slate-50 overflow-hidden">
-      {/* Sidebar fijo */}
+    <div className="flex h-screen supports-[height:100dvh]:h-dvh bg-slate-50 overflow-hidden">
+      {/* Sidebar fijo en escritorio y drawer en móvil */}
       <Sidebar
         currentTab={currentTab}
         onSelectTab={setCurrentTab}
         criticalCount={criticalCount}
+        isOpen={isMobileMenuOpen}
+        onClose={() => setIsMobileMenuOpen(false)}
       />
 
       {/* Área principal */}
@@ -221,12 +224,14 @@ export default function App() {
           onDownloadReport={handleDownloadReport}
           onOpenCreateModal={handleOpenCreateModal}
           onRefresh={() => loadData(true)}
+          onOpenMobileMenu={() => setIsMobileMenuOpen(true)}
+          isMobileMenuOpen={isMobileMenuOpen}
           isDownloadingReport={isDownloadingReport}
           isRefreshing={isRefreshing}
         />
 
         {/* Notificación flotante / Toast */}
-        <div className="fixed bottom-5 right-5 z-50 max-w-md w-full px-4 pointer-events-none">
+        <div className="fixed bottom-4 left-4 right-4 sm:left-auto sm:bottom-5 sm:right-5 sm:max-w-md z-50 pointer-events-none">
           <div className="pointer-events-auto">
             <Notification
               notification={notification}
@@ -236,13 +241,13 @@ export default function App() {
         </div>
 
         {/* Contenido scrolleable */}
-        <main className="flex-1 overflow-y-auto p-6 space-y-6">
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
           {currentTab === 'dashboard' && (
             <div className="space-y-6">
               <KpiCards summary={summary} loading={loading} />
 
               <div className="space-y-3">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-wrap items-center justify-between gap-2">
                   <h2 className="text-sm font-bold uppercase tracking-wider text-slate-700">
                     Artículos en Catálogo
                   </h2>

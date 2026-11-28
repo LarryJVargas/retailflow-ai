@@ -84,9 +84,9 @@ export const KpiCards: React.FC<KpiCardsProps> = ({ summary, loading }) => {
       </div>
 
       {criticalCount > 0 && (
-        <div className="bg-rose-50 border border-rose-200 rounded-xl p-4 flex items-center justify-between text-rose-900 text-sm">
-          <div className="flex items-center gap-2.5">
-            <AlertTriangle className="w-5 h-5 text-rose-600 shrink-0" />
+        <div className="bg-rose-50 border border-rose-200 rounded-xl p-4 flex items-start sm:items-center justify-between text-rose-900 text-sm">
+          <div className="flex items-start sm:items-center gap-2.5">
+            <AlertTriangle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5 sm:mt-0" />
             <span>
               <strong>Alerta Operativa:</strong> Existen <strong>{criticalCount} productos</strong> con necesidad de reaprovisionamiento ({out_of_stock_products} agotados y {low_stock_products} con bajo stock).
             </span>

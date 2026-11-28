@@ -40,11 +40,11 @@ export const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
           </div>
         </div>
 
-        <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
-          <Button variant="outline" onClick={onClose} disabled={loading} size="sm">
+        <div className="pt-3 border-t border-slate-100 flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2">
+          <Button variant="outline" onClick={onClose} disabled={loading} size="sm" className="w-full sm:w-auto">
             Cancelar
           </Button>
-          <Button variant="danger" onClick={onConfirm} loading={loading} size="sm">
+          <Button variant="danger" onClick={onConfirm} loading={loading} size="sm" className="w-full sm:w-auto">
             Sí, Eliminar
           </Button>
         </div>

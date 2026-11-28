@@ -61,10 +61,11 @@ export const ProductTable: React.FC<ProductTableProps> = ({
     <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden flex flex-col">
       {/* Controles de búsqueda y filtros */}
       <div className="p-4 border-b border-slate-100 flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between bg-slate-50/40">
-        <div className="relative flex-1 max-w-md">
+        <div className="relative w-full md:flex-1 md:max-w-md">
           <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <input
             type="text"
+            aria-label="Buscar por nombre o SKU"
             placeholder="Buscar por nombre o SKU..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -72,16 +73,17 @@ export const ProductTable: React.FC<ProductTableProps> = ({
           />
         </div>
 
-        <div className="flex flex-wrap items-center gap-2.5">
+        <div className="flex flex-wrap items-center gap-2">
           <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium">
             <Filter className="w-3.5 h-3.5" />
             <span>Filtros:</span>
           </div>
 
           <select
+            aria-label="Filtrar por categoría"
             value={categoryFilter}
             onChange={(e) => setCategoryFilter(e.target.value)}
-            className="px-3 py-1.5 text-xs bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-retail-600 font-medium text-slate-700"
+            className="flex-1 sm:flex-none min-w-[140px] px-3 py-1.5 text-xs bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-retail-600 font-medium text-slate-700"
           >
             <option value="">Todas las categorías</option>
             {categories.map((c) => (
@@ -92,9 +94,10 @@ export const ProductTable: React.FC<ProductTableProps> = ({
           </select>
 
           <select
+            aria-label="Filtrar por estado de stock"
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value as any)}
-            className="px-3 py-1.5 text-xs bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-retail-600 font-medium text-slate-700"
+            onChange={(e) => setStatusFilter(e.target.value as 'ALL' | 'HEALTHY' | 'LOW_STOCK' | 'OUT_OF_STOCK')}
+            className="flex-1 sm:flex-none min-w-[140px] px-3 py-1.5 text-xs bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-retail-600 font-medium text-slate-700"
           >
             <option value="ALL">Todos los estados</option>
             <option value="HEALTHY">Saludable</option>
@@ -106,17 +109,17 @@ export const ProductTable: React.FC<ProductTableProps> = ({
 
       {/* Tabla */}
       <div className="overflow-x-auto">
-        <table className="w-full text-left text-sm">
+        <table className="w-full min-w-[720px] text-left text-sm">
           <thead className="bg-slate-50 border-b border-slate-200 text-xs font-semibold uppercase tracking-wider text-slate-500">
             <tr>
-              <th className="px-6 py-3">ID / SKU</th>
-              <th className="px-6 py-3">Nombre</th>
-              <th className="px-6 py-3">Categoría</th>
-              <th className="px-6 py-3 text-right">Precio</th>
-              <th className="px-6 py-3 text-center">Stock Actual</th>
-              <th className="px-6 py-3 text-center">Stock Mínimo</th>
-              <th className="px-6 py-3 text-center">Estado</th>
-              <th className="px-6 py-3 text-right">Acciones</th>
+              <th className="px-4 sm:px-6 py-3">ID / SKU</th>
+              <th className="px-4 sm:px-6 py-3">Nombre</th>
+              <th className="px-4 sm:px-6 py-3">Categoría</th>
+              <th className="px-4 sm:px-6 py-3 text-right">Precio</th>
+              <th className="px-4 sm:px-6 py-3 text-center">Stock Actual</th>
+              <th className="px-4 sm:px-6 py-3 text-center">Stock Mínimo</th>
+              <th className="px-4 sm:px-6 py-3 text-center">Estado</th>
+              <th className="px-4 sm:px-6 py-3 text-right">Acciones</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
@@ -146,22 +149,22 @@ export const ProductTable: React.FC<ProductTableProps> = ({
                 const status = getProductStatus(p.stock, p.minimum_stock);
                 return (
                   <tr key={p.id} className="hover:bg-slate-50/70 transition-colors">
-                    <td className="px-6 py-3.5 whitespace-nowrap">
+                    <td className="px-4 sm:px-6 py-3.5 whitespace-nowrap">
                       <div className="font-mono text-xs font-bold text-slate-800">{p.sku}</div>
                       <div className="text-[11px] text-slate-400">#{p.id}</div>
                     </td>
-                    <td className="px-6 py-3.5 font-medium text-slate-900">
+                    <td className="px-4 sm:px-6 py-3.5 font-medium text-slate-900">
                       {p.name}
                     </td>
-                    <td className="px-6 py-3.5 text-slate-600 whitespace-nowrap">
+                    <td className="px-4 sm:px-6 py-3.5 text-slate-600 whitespace-nowrap">
                       <span className="px-2 py-0.5 rounded text-xs bg-slate-100 font-medium">
                         {p.category}
                       </span>
                     </td>
-                    <td className="px-6 py-3.5 text-right font-medium text-slate-900 whitespace-nowrap">
+                    <td className="px-4 sm:px-6 py-3.5 text-right font-medium text-slate-900 whitespace-nowrap">
                       ${p.price.toFixed(2)}
                     </td>
-                    <td className="px-6 py-3.5 text-center whitespace-nowrap">
+                    <td className="px-4 sm:px-6 py-3.5 text-center whitespace-nowrap">
                       <span
                         className={`inline-block font-bold text-sm ${
                           p.stock === 0
@@ -174,23 +177,27 @@ export const ProductTable: React.FC<ProductTableProps> = ({
                         {p.stock}
                       </span>
                     </td>
-                    <td className="px-6 py-3.5 text-center text-slate-500 font-medium whitespace-nowrap">
+                    <td className="px-4 sm:px-6 py-3.5 text-center text-slate-500 font-medium whitespace-nowrap">
                       {p.minimum_stock}
                     </td>
-                    <td className="px-6 py-3.5 text-center whitespace-nowrap">
+                    <td className="px-4 sm:px-6 py-3.5 text-center whitespace-nowrap">
                       <InventoryStatusBadge status={status} />
                     </td>
-                    <td className="px-6 py-3.5 text-right whitespace-nowrap">
+                    <td className="px-4 sm:px-6 py-3.5 text-right whitespace-nowrap">
                       <div className="flex items-center justify-end gap-1">
                         <button
+                          type="button"
                           onClick={() => onEdit(p)}
+                          aria-label={`Editar ${p.name}`}
                           className="p-1.5 text-slate-500 hover:text-retail-700 hover:bg-slate-100 rounded-lg transition-colors"
                           title="Editar producto"
                         >
                           <Edit3 className="w-4 h-4" />
                         </button>
                         <button
+                          type="button"
                           onClick={() => onDelete(p)}
+                          aria-label={`Eliminar ${p.name}`}
                           className="p-1.5 text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
                           title="Eliminar producto"
                         >
@@ -207,7 +214,7 @@ export const ProductTable: React.FC<ProductTableProps> = ({
       </div>
 
       {/* Footer contador */}
-      <div className="px-6 py-3 border-t border-slate-100 bg-slate-50/50 text-xs text-slate-500 flex justify-between items-center">
+      <div className="px-4 sm:px-6 py-3 border-t border-slate-100 bg-slate-50/50 text-xs text-slate-500 flex justify-between items-center">
         <span>Mostrando {filteredProducts.length} de {products.length} productos</span>
       </div>
     </div>
